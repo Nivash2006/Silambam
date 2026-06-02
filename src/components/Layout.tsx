@@ -84,15 +84,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
       >
         <div className="flex flex-col h-full py-12">
-          {/* Elite Logo Section */}
+          {/* Logo Section */}
           <div className={cn(
             "px-8 flex items-center transition-all duration-500",
             isSidebarOpen ? "gap-6" : "justify-center gap-0"
           )}>
             <div className="relative group shrink-0">
               <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 group-hover:opacity-60 transition-opacity duration-700" />
-              <div className="relative w-14 h-14 bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 rounded-[1.25rem] flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.2)] transition-all duration-700 group-hover:scale-110 group-hover:rotate-[15deg] overflow-hidden">
-                <img src="/logo.svg" alt="Logo" className="w-10 h-10 object-contain" />
+              <div className="relative w-14 h-14 bg-gradient-to-br from-[#05070a] via-[#052e16] to-[#000000] border border-emerald-500/20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-all duration-700 group-hover:scale-110 group-hover:rotate-[15deg] overflow-hidden">
+                <img src="/logo.png" alt="Logo" className="w-14 h-14 object-cover rounded-full" />
               </div>
             </div>
             {isSidebarOpen && (
@@ -170,13 +170,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   </div>
                   {isSidebarOpen && (
                     <div className="min-w-0 flex-1">
-                      <p className="text-[11px] font-black text-white italic truncate tracking-tight uppercase leading-none">Grandmaster Profile</p>
+                      <p className="text-[11px] font-black text-white italic truncate tracking-tight uppercase leading-none">Instructor Profile</p>
                       <button 
                          onClick={handleLogout}
                          className="flex items-center gap-2 text-[9px] text-white/20 font-black uppercase tracking-[0.2em] mt-1.5 hover:text-rose-500 transition-colors"
                       >
                          <LogOut className="w-3 h-3" />
-                         Sign Out
+                         Logout
                       </button>
                     </div>
                   )}
@@ -191,9 +191,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         "flex-1 flex flex-col min-w-0 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-10",
         isSidebarOpen ? "lg:pl-80" : "lg:pl-28"
       )}>
-        {/* Top Intelligence Bar */}
+        {/* Top Header Bar */}
         <header className={cn(
-          "h-24 px-8 lg:px-16 flex items-center justify-between shrink-0 fixed top-0 right-0 z-40 transition-all duration-500",
+          "h-20 lg:h-24 px-8 lg:px-16 flex items-center justify-between shrink-0 fixed top-0 right-0 z-40 transition-all duration-500",
           isSidebarOpen ? "lg:left-80" : "lg:left-28",
           scrolled ? "bg-black/40 backdrop-blur-2xl border-b border-white/5" : "bg-transparent"
         )}>
@@ -227,7 +227,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </header>
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto px-6 py-8 lg:px-16 pt-32 lg:pt-36 custom-scrollbar relative">
+        <main className="flex-1 overflow-y-auto px-6 py-8 lg:px-16 pt-24 lg:pt-36 custom-scrollbar relative">
           <div className="max-w-[1400px] mx-auto pb-32 lg:pb-12">
             {children}
           </div>
@@ -283,8 +283,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <div className="flex items-center justify-between mb-20">
                  <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 bg-emerald-500 rounded-[1.25rem] flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.3)] overflow-hidden">
-                    <img src="/logo.svg" alt="Logo" className="w-10 h-10 object-contain" />
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#05070a] via-[#052e16] to-[#000000] border border-emerald-500/20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.25)] overflow-hidden">
+                    <img src="/logo.png" alt="Logo" className="w-14 h-14 object-cover rounded-full" />
                   </div>
                   <div>
                      <h1 className="text-xl font-black italic uppercase leading-none">Maha Silambam</h1>
@@ -316,17 +316,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
               <div className="mt-auto pt-10 border-t border-white/5">
                 <div className="flex items-center gap-5">
-                  <div className="w-14 h-14 rounded-[1.25rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                      <User className="text-emerald-400 w-6 h-6" />
                   </div>
                   <div>
                     <p className="font-black text-white italic uppercase leading-none">Master Ji</p>
                     <button 
                        onClick={handleLogout}
-                       className="text-[9px] text-white/30 font-black uppercase tracking-widest mt-2 flex items-center gap-2 hover:text-rose-500 transition-colors"
+                       className="text-[9px] text-white/30 font-black uppercase tracking-widest mt-2 flex items-center gap-2 hover:text-rose-500 transition-colors animate-pulse"
                     >
                        <LogOut className="w-3 h-3" />
-                       Terminate Secure Session
+                       Logout
                     </button>
                   </div>
                 </div>

@@ -114,7 +114,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                     ) : (
                       <div className="text-center p-4">
                         <Camera className="w-8 h-8 text-white/20 mx-auto mb-2 group-hover:text-emerald-400 transition-colors" />
-                        <p className="text-[9px] font-black uppercase text-white/20 tracking-widest">Capture Athlete Identity</p>
+                        <p className="text-[9px] font-black uppercase text-white/20 tracking-widest">Upload Student Photo</p>
                       </div>
                     )}
                     {uploading && (
@@ -128,7 +128,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
 
                 <div className="mt-8 text-center">
                   <h4 className="text-xl font-black italic uppercase tracking-tighter text-white truncate w-full">{form.name || 'Unrecorded'}</h4>
-                  <p className="text-[10px] text-emerald-500/50 font-black uppercase tracking-[0.3em] mt-2">{form.belt_level} Candidate</p>
+                  <p className="text-[10px] text-emerald-500/50 font-black uppercase tracking-[0.3em] mt-2">{form.belt_level} Belt</p>
                 </div>
 
                 <div className="mt-auto space-y-4 w-full">
@@ -144,8 +144,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
               <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="p-8 border-b border-white/5 flex items-center justify-between relative z-20">
                   <div>
-                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Enrollment <span className="text-emerald-500">Protocol</span></h3>
-                    <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.4em] mt-2">Official Practitioner Registry v2.0</p>
+                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Student <span className="text-emerald-500">Enrollment</span></h3>
+                    <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.4em] mt-2">Academy Registration Form</p>
                   </div>
                   <button 
                     type="button"
@@ -221,20 +221,20 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
 
                     {/* Row 5 */}
                     <div className="space-y-4 md:col-span-2">
-                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Monthly Tribute (₹)</label>
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Monthly Fee (₹)</label>
                       <div className="relative group/input">
                         <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
-                        <input name="fee_amount" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Value Commitment" value={form.fee_amount} onChange={handleChange} required />
+                        <input name="fee_amount" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Enter fee amount" value={form.fee_amount} onChange={handleChange} required />
                       </div>
                     </div>
                   </div>
 
                   <div className="pt-10 flex flex-col sm:flex-row gap-6 relative z-30">
-                    <button type="button" onClick={onClose} className="btn-secondary !bg-white/[0.01] border-white/5 flex-1 h-18 uppercase font-black tracking-[0.3em] text-[10px] hover:!bg-rose-500/10 hover:!text-rose-500 hover:!border-rose-500/20 transition-all">Abort Protocol</button>
+                    <button type="button" onClick={onClose} className="btn-secondary !bg-white/[0.01] border-white/5 flex-1 h-18 uppercase font-black tracking-[0.3em] text-[10px] hover:!bg-rose-500/10 hover:!text-rose-500 hover:!border-rose-500/20 transition-all">Cancel</button>
                     <button type="submit" className="btn-primary flex-[2] h-18 uppercase font-black tracking-[0.3em] text-[10px] shadow-[0_20px_60px_rgba(16,185,129,0.3)] group relative overflow-hidden">
                       <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                       <Save className="w-5 h-5" />
-                      <span>{initialData ? 'Update Dossier' : 'Finalize Enlistment'}</span>
+                      <span>{initialData ? 'Update Student' : 'Enroll Student'}</span>
                     </button>
                   </div>
                 </form>

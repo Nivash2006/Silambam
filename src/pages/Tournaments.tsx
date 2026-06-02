@@ -130,17 +130,17 @@ const Tournaments: React.FC = () => {
              </div>
              <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Hall of Excellence</p>
           </div>
-          <h2 className="text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Combat <span className="text-emerald-500 text-glow">Archives</span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
+            Tournament <span className="text-emerald-500 text-glow">Records</span>
           </h2>
           <div className="flex items-center gap-6 mt-8">
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-               <ShieldCheck className="w-3 h-3 text-emerald-400" />
-               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Elite Tier Archive</span>
+                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Academy Achievements</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] rounded-full border border-white/5">
-               <Star className="w-3 h-3 text-white/40" />
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Verified Victories: {tournaments.length}</span>
+                <Star className="w-3 h-3 text-white/40" />
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Verified Victories: {tournaments.length}</span>
             </div>
           </div>
         </motion.div>
@@ -149,7 +149,7 @@ const Tournaments: React.FC = () => {
           className="btn-primary !h-20 !px-12 group shadow-[0_20px_60px_rgba(16,185,129,0.3)] !rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em]"
         >
           <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
-          Protocol Victory
+          Add Record
         </button>
       </div>
 

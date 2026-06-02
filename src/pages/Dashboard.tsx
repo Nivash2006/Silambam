@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
             </div>
             <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em]">Command Center v2.0</p>
           </div>
-          <h2 className="text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-tight">
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-tight">
             Force <span className="text-emerald-500 text-glow">Intelligence</span>
           </h2>
           <div className="flex items-center gap-4 mt-6">
@@ -235,7 +235,7 @@ const Dashboard: React.FC = () => {
           </Link>
           <Link to="/students" className="btn-primary !rounded-[2rem]">
             <Plus className="w-5 h-5" />
-            Enlist Student
+            Add Student
           </Link>
         </motion.div>
       </div>
@@ -264,7 +264,7 @@ const Dashboard: React.FC = () => {
               <div className="mt-12">
                 <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em]">{stat.label}</p>
                 <div className="flex items-baseline gap-2 mt-3">
-                  <p className="text-5xl lg:text-6xl font-black tracking-tighter text-white group-hover:text-emerald-500 transition-all duration-700 italic">
+                  <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter text-white group-hover:text-emerald-500 transition-all duration-700 italic">
                     {stat.value}
                   </p>
                 </div>

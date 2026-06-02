@@ -98,7 +98,7 @@ const Students: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Execute deletion protocol for this record?')) return;
+    if (!confirm('Are you sure you want to delete this student?')) return;
     try {
       const { error } = await supabase
         .from('students')
@@ -106,10 +106,10 @@ const Students: React.FC = () => {
         .eq('id', id);
       
       if (error) throw error;
-      toast.success('Record purged successfully');
+      toast.success('Student deleted successfully');
       fetchStudents();
     } catch (error) {
-      toast.error('Deletion protocol failed');
+      toast.error('Failed to delete student');
     }
   };
 
@@ -176,12 +176,12 @@ const Students: React.FC = () => {
     <div className="space-y-12 lg:space-y-16 pb-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-          <h2 className="text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Elite <span className="text-emerald-500 text-glow">Unit</span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
+            Student <span className="text-emerald-500 text-glow">Directory</span>
           </h2>
           <div className="flex items-center gap-4 mt-6">
             <div className="h-px w-8 bg-emerald-500/50" />
-            <p className="text-white/30 font-black uppercase tracking-[0.4em] text-[10px]">Managing {students.length} Synchronized Records</p>
+            <p className="text-white/30 font-black uppercase tracking-[0.4em] text-[10px]">Managing {students.length} Student Records</p>
           </div>
         </motion.div>
         
@@ -192,7 +192,7 @@ const Students: React.FC = () => {
           className="btn-primary group !rounded-[2rem] h-20 px-12"
         >
           <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
-          Enlist Warrior
+          Add Student
         </motion.button>
       </div>
 
@@ -204,7 +204,7 @@ const Students: React.FC = () => {
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 type="text"
-                placeholder="Search by name, rank, or protocol..."
+                placeholder="Search by name, rank, or phone..."
                 className="bg-transparent w-full pl-16 pr-8 h-16 text-lg font-bold text-white placeholder:text-white/10 focus:outline-none"
                 value={search}
                 onChange={e => setSearch(e.target.value)}

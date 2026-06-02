@@ -192,19 +192,19 @@ const Reports: React.FC = () => {
              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
                 <BarChart3 className="w-5 h-5 text-emerald-500" />
              </div>
-             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Terminal Diagnostics</p>
+             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Academy Analytics</p>
           </div>
-          <h2 className="text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Intelligence <span className="text-emerald-500 text-glow">Hub</span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
+            Reports <span className="text-emerald-500 text-glow">Hub</span>
           </h2>
           <div className="flex items-center gap-6 mt-8">
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Grade 1 clearance</span>
+               <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Verified Access</span>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] rounded-full border border-white/5">
                <Layers className="w-3 h-3 text-white/40" />
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Active Datastreams: {reportTypes.length}</span>
+               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Available Reports: {reportTypes.length}</span>
             </div>
           </div>
         </motion.div>
@@ -267,7 +267,7 @@ const Reports: React.FC = () => {
                 disabled={loading}
                 className="btn-primary !h-16 !px-12 flex-1 group shadow-[0_20px_60px_rgba(16,185,129,0.2)] !rounded-[2rem]"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <><BarChart3 className="w-5 h-5" /> Execute Protocol</>}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : <><BarChart3 className="w-5 h-5" /> Generate Report</>}
               </button>
               
               <AnimatePresence>

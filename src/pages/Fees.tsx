@@ -157,10 +157,10 @@ const Fees: React.FC = () => {
              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
                 <ShieldCheck className="w-5 h-5 text-emerald-500" />
              </div>
-             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Fiscal Sovereignty</p>
+             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Fees Management</p>
           </div>
-          <h2 className="text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Tribute <span className="text-emerald-500 text-glow">Registry</span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
+            Fees <span className="text-emerald-500 text-glow">Ledger</span>
           </h2>
           <div className="flex items-center gap-6 mt-8">
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
@@ -177,7 +177,7 @@ const Fees: React.FC = () => {
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
           <button className="btn-secondary !h-16 !px-10 backdrop-blur-xl border-white/5 !bg-white/[0.02] shadow-xl hover:shadow-white/5 transition-all">
             <Download className="w-5 h-5" />
-            Download Ledger
+            Download PDF
           </button>
         </motion.div>
       </div>
@@ -263,7 +263,7 @@ const Fees: React.FC = () => {
           <div className="glass-card !p-8 !rounded-[2.5rem] border-white/5 space-y-6">
              <div className="flex items-center gap-3">
                 <Filter className="w-4 h-4 text-emerald-400" />
-                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Protocol Filter</h4>
+                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Filter</h4>
              </div>
              <div className="flex flex-col gap-2">
                 {(['all', 'paid', 'pending'] as const).map((f) => (

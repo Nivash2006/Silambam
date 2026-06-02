@@ -201,10 +201,10 @@ const Attendance: React.FC = () => {
              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
                 <BarChart3 className="w-5 h-5 text-emerald-500" />
              </div>
-             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Session Intelligence</p>
+             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Session Attendance</p>
           </div>
-          <h2 className="text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Efficiency <span className="text-emerald-500 text-glow">Logs</span>
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
+            Attendance <span className="text-emerald-500 text-glow">Logs</span>
           </h2>
           <div className="flex items-center gap-6 mt-8">
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
@@ -225,7 +225,7 @@ const Attendance: React.FC = () => {
           </button>
           <button onClick={handleSave} disabled={saving} className="btn-primary !h-16 !px-12 !rounded-[2rem] shadow-[0_20px_60px_rgba(16,185,129,0.2)]">
             {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-            {saving ? 'Syncing...' : 'Commit Registry'}
+            {saving ? 'Syncing...' : 'Save Attendance'}
           </button>
         </motion.div>
       </div>
@@ -235,7 +235,7 @@ const Attendance: React.FC = () => {
         <div className="lg:col-span-4 space-y-10">
           <div className="glass-card !p-8 !rounded-[3rem] border-white/5 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/[0.02] rounded-full blur-3xl" />
-            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-6">Select Cycle</p>
+            <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] mb-6">Select Date</p>
             <div className="relative group/input">
               <CalendarIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 transition-transform group-focus-within/input:scale-110" />
               <input 
@@ -308,7 +308,7 @@ const Attendance: React.FC = () => {
               <Search className="w-5 h-5 text-white/10" />
               <input 
                 type="text" 
-                placeholder="Locate practitioner by protocol name..."
+                placeholder="Search students by name..."
                 className="bg-transparent flex-1 font-bold text-white placeholder:text-white/10 focus:outline-none"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
