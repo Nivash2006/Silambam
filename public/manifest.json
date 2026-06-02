@@ -1,0 +1,18 @@
+{
+  "name": "Maha Silambam Academy",
+  "short_name": "Maha Silambam",
+  "description": "A professional management system for Silambam academies to track students, attendance, fees, and tournament performance.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#05070a",
+  "theme_color": "#05070a",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "992x992",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

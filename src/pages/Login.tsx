@@ -72,7 +72,7 @@ export default function Login() {
           <div className="relative group mb-8">
             <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
             <div className="relative w-20 h-20 bg-gradient-to-br from-[#05070a] via-[#052e16] to-[#000000] border-2 border-emerald-500/30 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-all duration-700 group-hover:scale-110 group-hover:rotate-[15deg] overflow-hidden">
-              <img src="/logo.png" alt="Logo" className="w-20 h-20 object-cover rounded-full" />
+              <img src="/logo.png?v=3" alt="Logo" className="w-20 h-20 object-cover rounded-full" />
             </div>
           </div>
           

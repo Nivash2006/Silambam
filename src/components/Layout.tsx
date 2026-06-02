@@ -92,7 +92,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="relative group shrink-0">
               <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 group-hover:opacity-60 transition-opacity duration-700" />
               <div className="relative w-14 h-14 bg-gradient-to-br from-[#05070a] via-[#052e16] to-[#000000] border border-emerald-500/20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-all duration-700 group-hover:scale-110 group-hover:rotate-[15deg] overflow-hidden">
-                <img src="/logo.png" alt="Logo" className="w-14 h-14 object-cover rounded-full" />
+                <img src="/logo.png?v=3" alt="Logo" className="w-14 h-14 object-cover rounded-full" />
               </div>
             </div>
             {isSidebarOpen && (
@@ -284,7 +284,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="flex items-center justify-between mb-20">
                  <div className="flex items-center gap-5">
                   <div className="w-14 h-14 bg-gradient-to-br from-[#05070a] via-[#052e16] to-[#000000] border border-emerald-500/20 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(16,185,129,0.25)] overflow-hidden">
-                    <img src="/logo.png" alt="Logo" className="w-14 h-14 object-cover rounded-full" />
+                    <img src="/logo.png?v=3" alt="Logo" className="w-14 h-14 object-cover rounded-full" />
                   </div>
                   <div>
                      <h1 className="text-xl font-black italic uppercase leading-none">Maha Silambam</h1>
