@@ -34,6 +34,26 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
     photo_url: initialData?.photo_url || '',
   });
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setForm({
+        name: initialData?.name || '',
+        age: initialData?.age?.toString() || '',
+        mothers_name: initialData?.mothers_name || '',
+        dob: initialData?.dob || '',
+        class_std: initialData?.class_std || '',
+        student_type: initialData?.student_type || 'New' as 'New' | 'Old',
+        phone: initialData?.phone || '',
+        parent_phone: initialData?.parent_phone || '',
+        address: initialData?.address || '',
+        joining_date: initialData?.joining_date || format(new Date(), 'yyyy-MM-dd'),
+        belt_level: initialData?.belt_level || 'White' as BeltLevel,
+        fee_amount: initialData?.fee_amount?.toString() || '500',
+        photo_url: initialData?.photo_url || '',
+      });
+    }
+  }, [isOpen, initialData]);
+
   const [uploading, setUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

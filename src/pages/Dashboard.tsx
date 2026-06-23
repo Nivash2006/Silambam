@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
 
       setStats([
         { 
-          label: 'Total Athletes', 
+          label: 'Total Students', 
           value: studentCount?.toString() || '0', 
           icon: Users, 
           color: 'text-emerald-400',
@@ -148,7 +148,7 @@ const Dashboard: React.FC = () => {
           glow: 'shadow-emerald-500/10'
         },
         { 
-          label: 'Outstanding', 
+          label: 'Pending Fees', 
           value: '₹' + pendingFeesTotal.toLocaleString(), 
           icon: CreditCard, 
           color: 'text-rose-400',
@@ -207,10 +207,10 @@ const Dashboard: React.FC = () => {
             <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
               <Zap className="w-6 h-6 text-emerald-500" />
             </div>
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em]">Command Center v2.0</p>
+            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.5em]">Academy Dashboard</p>
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-tight">
-            Force <span className="text-emerald-500 text-glow">Intelligence</span>
+            Academy <span className="text-emerald-500 text-glow">Dashboard</span>
           </h2>
           <div className="flex items-center gap-4 mt-6">
             <div className="flex -space-x-3">
@@ -219,7 +219,7 @@ const Dashboard: React.FC = () => {
               ))}
               <div className="w-8 h-8 rounded-full border-2 border-[#05070a] bg-emerald-500 flex items-center justify-center text-[10px] font-black">+</div>
             </div>
-            <p className="text-white/40 font-bold uppercase tracking-[0.2em] text-[10px]">3 Athletes Training Now</p>
+            <p className="text-white/40 font-bold uppercase tracking-[0.2em] text-[10px]">3 Students Training Now</p>
           </div>
         </motion.div>
 
@@ -280,7 +280,7 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-4 space-y-10">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl font-black tracking-tight italic uppercase flex items-center gap-4">
-              Force <span className="text-white/20">Insights</span>
+              Academy <span className="text-white/20">Insights</span>
               <div className="h-px flex-1 bg-white/5" />
             </h3>
           </div>
@@ -317,7 +317,7 @@ const Dashboard: React.FC = () => {
                 </motion.div>
               )) : (
                  <div className="glass-card !p-12 text-center border-dashed border-white/5">
-                    <p className="text-white/10 font-black uppercase tracking-widest">Zero Threats Detected</p>
+                    <p className="text-white/10 font-black uppercase tracking-widest">No Alerts</p>
                  </div>
               )}
             </AnimatePresence>
@@ -333,10 +333,10 @@ const Dashboard: React.FC = () => {
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-6">
                   <Award className="w-5 h-5 text-amber-400" />
-                  <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.4em]">Rank Spotlight</p>
+                  <p className="text-[10px] font-black text-amber-400 uppercase tracking-[0.4em]">Student Spotlight</p>
                 </div>
                 <h4 className="text-3xl font-black text-white italic uppercase leading-none">{topPerformer.name}</h4>
-                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-3 mb-6">{topPerformer.rank} Rank • Advanced Flow</p>
+                <p className="text-[10px] text-white/40 font-black uppercase tracking-widest mt-3 mb-6">{topPerformer.rank} Belt</p>
                 
                 <div className="flex items-center justify-between pt-6 border-t border-white/5">
                    <div className="flex flex-col">
@@ -357,7 +357,7 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-8 space-y-10">
           <div className="flex items-center justify-between">
              <h3 className="text-2xl font-black tracking-tight italic uppercase flex items-center gap-4">
-              Protocol <span className="text-white/20">Logs</span>
+              Recent <span className="text-white/20">Achievements</span>
               <div className="h-px flex-1 bg-white/5" />
             </h3>
             <Link to="/tournaments" className="text-[9px] font-black text-emerald-500 hover:text-emerald-400 transition-all uppercase tracking-[0.3em] bg-emerald-500/5 px-6 py-3 rounded-2xl border border-emerald-500/10">Full Archive</Link>
@@ -401,7 +401,7 @@ const Dashboard: React.FC = () => {
               </motion.div>
             )) : (
               <div className="glass-card py-24 text-center border-dashed border-white/5">
-                <p className="text-white/10 italic font-black uppercase tracking-[0.4em]">No Combat Records Synthesized</p>
+                <p className="text-white/10 italic font-black uppercase tracking-[0.4em]">No Achievements Found</p>
               </div>
             )}
             
@@ -412,8 +412,8 @@ const Dashboard: React.FC = () => {
                      <FileText className="w-7 h-7 text-sky-400" />
                   </div>
                   <div>
-                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-sky-400 transition-colors">Data Protocol</p>
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Export Analytics Feed</p>
+                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-sky-400 transition-colors">Reports Hub</p>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Export & Generate Reports</p>
                   </div>
                </Link>
                <Link to="/fees" className="glass-card !p-8 flex items-center gap-8 group hover:bg-emerald-400/[0.03] border-white/5 !rounded-[3rem] transition-all">
@@ -421,8 +421,8 @@ const Dashboard: React.FC = () => {
                      <CreditCard className="w-7 h-7 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-emerald-400 transition-colors">Fee Registry</p>
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Manage Ledger Entry</p>
+                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-emerald-400 transition-colors">Fees Hub</p>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Manage Fee Payments</p>
                   </div>
                </Link>
             </div>

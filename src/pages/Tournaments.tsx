@@ -68,7 +68,7 @@ const Tournaments: React.FC = () => {
       if (tournamentError) throw tournamentError;
       setTournaments(tournamentData || []);
     } catch (error) {
-      toast.error('Failed to synchronize archives.');
+      toast.error('Failed to load tournament records.');
     } finally {
       setLoading(false);
     }
@@ -76,19 +76,19 @@ const Tournaments: React.FC = () => {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    const loadToast = toast.loading('Archivizing victory protocol...');
+    const loadToast = toast.loading('Saving tournament record...');
     try {
       const { error } = await supabase
         .from('tournaments')
         .insert([newTournament]);
       
       if (error) throw error;
-      toast.success('Victory recorded in archives.', { id: loadToast });
+      toast.success('Tournament record saved successfully.', { id: loadToast });
       setIsFormOpen(false);
       fetchData();
       setNewTournament({ name: '', date: '', student_id: '', position: 'Participation' });
     } catch (error) {
-      toast.error('Archival synthesis failure.', { id: loadToast });
+      toast.error('Failed to save tournament record.', { id: loadToast });
     }
   };
 
@@ -128,7 +128,7 @@ const Tournaments: React.FC = () => {
              <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center border border-emerald-500/20">
                 <Trophy className="w-5 h-5 text-emerald-500" />
              </div>
-             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Hall of Excellence</p>
+             <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Achievements & Honors</p>
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
             Tournament <span className="text-emerald-500 text-glow">Records</span>
@@ -140,7 +140,7 @@ const Tournaments: React.FC = () => {
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] rounded-full border border-white/5">
                 <Star className="w-3 h-3 text-white/40" />
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Verified Victories: {tournaments.length}</span>
+                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Records: {tournaments.length}</span>
             </div>
           </div>
         </motion.div>
@@ -160,7 +160,7 @@ const Tournaments: React.FC = () => {
             <Search className="w-6 h-6 text-white/10 group-focus-within:text-emerald-500 transition-colors" />
             <input 
               type="text" 
-              placeholder="Locate legendary circuits and combat events..." 
+              placeholder="Search tournaments..." 
               className="bg-transparent w-full h-16 text-lg font-bold text-white placeholder:text-white/5 focus:outline-none italic"
               value={search}
               onChange={e => setSearch(e.target.value)}
@@ -228,7 +228,7 @@ const Tournaments: React.FC = () => {
                           'bg-white/5 text-white/40 border-white/5'
                         )}>
                           {isGold && <Star className="w-5 h-5 animate-pulse" />}
-                          {t.position} Rank
+                          {t.position === 'Participation' ? 'Participation' : `${t.position} Place`}
                         </span>
                       </div>
                     </div>
@@ -239,7 +239,7 @@ const Tournaments: React.FC = () => {
             {filtered.length === 0 && (
                <div className="flex flex-col items-center justify-center py-32 space-y-6 opacity-20">
                   <Trophy className="w-20 h-20" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.5em]">No legends detected in the current datastream</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.5em]">No tournament records found</p>
                </div>
             )}
           </div>
@@ -253,14 +253,14 @@ const Tournaments: React.FC = () => {
             </div>
             
             <h3 className="text-[10px] font-black italic uppercase tracking-[0.4em] mb-14 flex items-center gap-4 text-emerald-500">
-              <TrendingUp className="w-5 h-5 animate-pulse" /> Efficiency Matrices
+              <TrendingUp className="w-5 h-5 animate-pulse" /> Statistics
             </h3>
 
             <div className="space-y-12">
               {[
-                { label: 'Gold Epochs', value: stats.gold, icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-                { label: 'Silver Citations', value: stats.silver, icon: Award, color: 'text-slate-300', bg: 'bg-slate-300/10' },
-                { label: 'Victory Podiums', value: stats.podiums, icon: Trophy, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+                { label: 'Gold Medals', value: stats.gold, icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+                { label: 'Silver Medals', value: stats.silver, icon: Award, color: 'text-slate-300', bg: 'bg-slate-300/10' },
+                { label: 'Podium Finishes', value: stats.podiums, icon: Trophy, color: 'text-rose-500', bg: 'bg-rose-500/10' },
               ].map((stat, idx) => (
                 <motion.div 
                   initial={{ opacity: 0, x: 20 }}
@@ -286,8 +286,8 @@ const Tournaments: React.FC = () => {
 
             <div className="mt-16 pt-12 border-t border-white/5 relative">
               <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Success Probability</span>
-                <span className="text-2xl font-black text-emerald-500 italic">Elite Grade</span>
+                <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Achievement Rate</span>
+                <span className="text-2xl font-black text-emerald-500 italic">Excellent</span>
               </div>
               <div className="w-full bg-black/40 h-4 rounded-full overflow-hidden border border-white/5 relative p-0.5">
                 <motion.div 
@@ -305,10 +305,10 @@ const Tournaments: React.FC = () => {
           <div className="glass-card !p-12 !rounded-[3rem] border-white/5 bg-white/[0.01] space-y-8">
              <div className="flex items-center gap-4 text-emerald-500">
                 <Zap className="w-5 h-5 fill-emerald-500" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em]">Combat Insight</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.4em]">Student Inspiration</h4>
              </div>
              <p className="text-[11px] text-white/40 leading-[2] italic uppercase font-bold tracking-wider">
-                "The records in this archive represent verified synchronization of athlete excellence and administrative precision."
+                "The records in this archive represent verified student achievements and active participation in tournaments."
              </p>
              <div className="h-px w-1/4 bg-emerald-500/20" />
              <div className="flex items-center gap-4">
@@ -345,10 +345,10 @@ const Tournaments: React.FC = () => {
                 
                 <div className="flex items-center justify-between mb-16 relative z-30">
                   <div>
-                    <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white leading-none">Log <span className="text-emerald-500">Victory</span></h3>
+                    <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white leading-none">Add <span className="text-emerald-500">Record</span></h3>
                     <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.5em] mt-4 flex items-center gap-3">
                        <span className="w-1 h-1 rounded-full bg-emerald-500" />
-                       New Achievement Protocol
+                       New Tournament Record
                     </p>
                   </div>
                   <button 
@@ -362,13 +362,13 @@ const Tournaments: React.FC = () => {
 
                 <form className="space-y-10 relative z-30" onSubmit={handleAdd}>
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Championship Identity</label>
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Tournament Name</label>
                     <div className="relative group/input">
                       <Trophy className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50 group-focus-within/input:text-emerald-500 transition-colors" />
                       <input 
                         required 
                         className="bg-black/40 border border-white/5 w-full h-20 pl-16 pr-8 rounded-[1.5rem] text-white font-black text-xl italic focus:outline-none focus:ring-2 ring-emerald-500/20 transition-all placeholder:text-white/5" 
-                        placeholder="Enter circuit name..."
+                        placeholder="Enter tournament name..."
                         value={newTournament.name} 
                         onChange={e => setNewTournament({...newTournament, name: e.target.value})} 
                       />
@@ -376,16 +376,16 @@ const Tournaments: React.FC = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Champion Selection</label>
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Select Student</label>
                     <div className="relative group/select">
                       <Target className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50 group-focus-within/select:text-emerald-500 transition-colors" />
                       <select 
                         required 
-                        className="bg-black/40 border border-white/5 w-full h-20 pl-16 pr-8 rounded-[1.5rem] text-white font-black text-xl italic focus:outline-none focus:ring-2 ring-emerald-500/20 transition-all appearance-none cursor-pointer"
+                        className="bg-black/40 border border-white/5 w-full h-20 pl-16 pr-8 rounded-[1.5rem] text-white font-black text-xl italic focus:outline-none focus:ring-2 ring-emerald-500/20 appearance-none cursor-pointer"
                         value={newTournament.student_id} 
                         onChange={e => setNewTournament({...newTournament, student_id: e.target.value})}
                       >
-                        <option value="" className="bg-[#0B0F0C]">Locate Warrior...</option>
+                        <option value="" className="bg-[#0B0F0C]">Select Student...</option>
                         {students.map(s => <option key={s.id} value={s.id} className="bg-[#0B0F0C]">{s.name}</option>)}
                       </select>
                     </div>
@@ -393,7 +393,7 @@ const Tournaments: React.FC = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Temporal Node</label>
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Date</label>
                       <div className="relative group/date">
                          <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50" />
                          <input 
@@ -406,7 +406,7 @@ const Tournaments: React.FC = () => {
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Victory Rank</label>
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Tournament Result</label>
                       <div className="relative group/select">
                         <Crown className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50" />
                         <select 
@@ -414,10 +414,10 @@ const Tournaments: React.FC = () => {
                           value={newTournament.position} 
                           onChange={e => setNewTournament({...newTournament, position: e.target.value as any})}
                         >
-                          <option value="1st" className="bg-[#0B0F0C]">1st - Champion</option>
-                          <option value="2nd" className="bg-[#0B0F0C]">2nd - Elite Podium</option>
-                          <option value="3rd" className="bg-[#0B0F0C]">3rd - Vanguard</option>
-                          <option value="Participation" className="bg-[#0B0F0C]">Participation Node</option>
+                          <option value="1st" className="bg-[#0B0F0C]">1st Place</option>
+                          <option value="2nd" className="bg-[#0B0F0C]">2nd Place</option>
+                          <option value="3rd" className="bg-[#0B0F0C]">3rd Place</option>
+                          <option value="Participation" className="bg-[#0B0F0C]">Participation</option>
                         </select>
                       </div>
                     </div>
@@ -428,7 +428,7 @@ const Tournaments: React.FC = () => {
                     className="btn-primary w-full !h-24 text-[11px] font-black uppercase tracking-[0.5em] shadow-[0_30px_70px_rgba(16,185,129,0.3)] mt-12 group !rounded-[2.5rem]"
                   >
                     <Save className="w-6 h-6 group-hover:scale-125 transition-transform" /> 
-                    Synchronize Record
+                    Save Record
                   </button>
                 </form>
               </motion.div>

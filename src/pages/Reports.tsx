@@ -42,33 +42,33 @@ const Reports: React.FC = () => {
   const [reportData, setReportData] = useState<any[]>([]);
   const [search, setSearch] = useState('');
 
-  const generateReport = async (typeOverride?: string) => {
-    const activeType = typeOverride || reportType;
-    const loadToast = toast.loading(`Synthesizing ${activeType} datastream...`);
-    try {
-      setLoading(true);
+    const generateReport = async (typeOverride?: string) => {
+      const activeType = typeOverride || reportType;
+      const loadToast = toast.loading(`Generating ${activeType} report...`);
+      try {
+        setLoading(true);
       let query;
       
-      if (activeType === 'Attendance Summary' || activeType === 'Attendance Dynamics') {
+      if (activeType === 'Attendance Summary') {
         query = supabase
           .from('attendance')
           .select(`*, student:students(name)`)
           .gte('date', startDate)
           .lte('date', endDate);
-      } else if (activeType === 'Fee Collection' || activeType === 'Fiscal Collection') {
+      } else if (activeType === 'Fee Collection') {
         query = supabase
           .from('fees')
           .select(`*, student:students(name)`)
           .gte('payment_date', startDate)
           .lte('payment_date', endDate);
-      } else if (activeType === 'Tournament History' || activeType === 'Combat Excellence') {
+      } else if (activeType === 'Tournament History') {
         query = supabase
           .from('tournaments')
           .select(`*, student:students(name)`)
           .gte('date', startDate)
           .lte('date', endDate);
       } else {
-        toast.error('Unrecognized datastream protocol', { id: loadToast });
+        toast.error('Unrecognized report type', { id: loadToast });
         setReportData([]);
         return;
       }
@@ -77,16 +77,16 @@ const Reports: React.FC = () => {
       if (error) throw error;
       setReportData(data || []);
       setReportType(activeType);
-      toast.success(`${activeType} analysis complete.`, { id: loadToast });
+      toast.success(`${activeType} report generated successfully.`, { id: loadToast });
     } catch (error) {
-      toast.error('Analytical synthesis failed.', { id: loadToast });
+      toast.error('Failed to generate report.', { id: loadToast });
     } finally {
       setLoading(false);
     }
   };
 
   const exportPDF = () => {
-    const exportToast = toast.loading('Encoding PDF matrix...');
+    const exportToast = toast.loading('Generating PDF...');
     try {
       if (reportData.length === 0) throw new Error('Empty dataset');
       const doc = new jsPDF() as any;
@@ -113,14 +113,14 @@ const Reports: React.FC = () => {
       });
 
       doc.save(`${reportType.replace(/ /g, '_')}_${startDate}.pdf`);
-      toast.success('PDF download initiated.', { id: exportToast });
+      toast.success('PDF downloaded successfully.', { id: exportToast });
     } catch (error) {
-      toast.error('PDF encoding failed.', { id: exportToast });
+      toast.error('Failed to generate PDF.', { id: exportToast });
     }
   };
 
   const exportExcel = () => {
-    const exportToast = toast.loading('Compiling spreadsheet grid...');
+    const exportToast = toast.loading('Generating Excel sheet...');
     try {
       if (reportData.length === 0) throw new Error('Empty dataset');
       const worksheet = XLSX.utils.json_to_sheet(reportData.map(item => ({
@@ -131,9 +131,9 @@ const Reports: React.FC = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
       XLSX.writeFile(workbook, `${reportType.replace(/ /g, '_')}_${startDate}.xlsx`);
-      toast.success('Excel ledger exported.', { id: exportToast });
+      toast.success('Excel report downloaded successfully.', { id: exportToast });
     } catch (error) {
-      toast.error('Excel compilation failure.', { id: exportToast });
+      toast.error('Failed to generate Excel sheet.', { id: exportToast });
     }
   };
 
@@ -143,24 +143,24 @@ const Reports: React.FC = () => {
 
   const reportTypes = [
     { 
-      title: 'Attendance Dynamics', 
-      desc: 'Monthly practitioner participation and lineage retention.', 
+      title: 'Attendance Summary', 
+      desc: 'Monthly student attendance records.', 
       icon: Users,
       color: 'text-sky-400',
       bg: 'bg-sky-500/10',
       border: 'border-sky-500/20'
     },
     { 
-      title: 'Fiscal Collection', 
-      desc: 'Direct audit of synchronized and outstanding tributes.', 
+      title: 'Fee Collection', 
+      desc: 'Overview of paid and pending student fees.', 
       icon: CreditCard,
       color: 'text-emerald-400',
       bg: 'bg-emerald-500/10',
       border: 'border-emerald-500/20'
     },
     { 
-      title: 'Combat Excellence', 
-      desc: 'Legacy achievements across verified tournament circuits.', 
+      title: 'Tournament History', 
+      desc: 'Student achievements and tournament history.', 
       icon: Trophy,
       color: 'text-yellow-400',
       bg: 'bg-yellow-500/10',
@@ -217,12 +217,12 @@ const Reports: React.FC = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.02] rounded-full blur-3xl" />
             
             <h3 className="text-sm font-black italic uppercase tracking-[0.3em] mb-12 flex items-center gap-4 text-emerald-500">
-              <Zap className="w-5 h-5 animate-pulse" /> Query Parameters
+              <Zap className="w-5 h-5 animate-pulse" /> Report Options
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div className="space-y-4">
-                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">Analytical Stream</label>
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">Report Type</label>
                 <div className="relative group/select">
                   <BarChart3 className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 transition-transform group-focus-within/select:scale-110" />
                   <select 
@@ -237,7 +237,7 @@ const Reports: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-4">
-                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">Temporal Window</label>
+                <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] ml-1">Date Range</label>
                 <div className="flex gap-4">
                   <div className="relative flex-1 group/date">
                     <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 transition-transform group-focus-within/date:scale-110" />
@@ -304,7 +304,7 @@ const Reports: React.FC = () => {
                     <Search className="w-5 h-5 text-white/20" />
                     <input 
                       type="text" 
-                      placeholder="Locate within extracted datastream..."
+                      placeholder="Search report entries..."
                       className="bg-transparent flex-1 font-bold text-white placeholder:text-white/10 focus:outline-none"
                       value={search}
                       onChange={e => setSearch(e.target.value)}
@@ -316,7 +316,7 @@ const Reports: React.FC = () => {
                       <div className="flex items-center gap-4">
                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] animate-pulse" />
                         <h3 className="text-[10px] font-black italic uppercase tracking-[0.3em] text-white/40">
-                          Extracted Datastreams ({filteredData.length} entries)
+                          Report Entries ({filteredData.length} entries)
                         </h3>
                       </div>
                     </div>
@@ -324,9 +324,9 @@ const Reports: React.FC = () => {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="border-b border-white/[0.03]">
-                            <th className="px-10 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/20">Identity Node</th>
-                            <th className="px-10 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/20">Temporal Node</th>
-                            <th className="px-10 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Magnitude</th>
+                            <th className="px-10 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/20">Student Name</th>
+                            <th className="px-10 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/20">Date</th>
+                            <th className="px-10 py-6 text-[9px] font-black uppercase tracking-[0.3em] text-white/20 text-right">Details</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/[0.02]">
@@ -368,7 +368,7 @@ const Reports: React.FC = () => {
                  <div className="w-24 h-24 rounded-[2rem] bg-white/[0.02] border border-white/5 flex items-center justify-center">
                     <AlertCircle className="w-10 h-10 text-white/5" />
                  </div>
-                 <p className="text-[10px] font-black text-white/10 uppercase tracking-[0.5em]">System Idle: Awaiting Analysis</p>
+                 <p className="text-[10px] font-black text-white/10 uppercase tracking-[0.5em]">No report generated yet</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -379,7 +379,7 @@ const Reports: React.FC = () => {
           <div className="flex items-center gap-4 px-2">
             <Layers className="w-4 h-4 text-emerald-500" />
             <h3 className="text-[10px] font-black italic uppercase tracking-[0.4em] text-white/20">
-               Intelligence Modules
+               Available Reports
             </h3>
           </div>
           
@@ -428,10 +428,10 @@ const Reports: React.FC = () => {
           <div className="glass-card !p-10 !rounded-[2.5rem] border-emerald-500/10 bg-gradient-to-br from-emerald-500/[0.02] to-transparent space-y-6">
              <div className="flex items-center gap-3">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Efficiency Forecast</h4>
+                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Report Summary</h4>
              </div>
              <p className="text-[10px] text-white/20 italic leading-loose">
-                Analytical modules leverage academy data to synthesize performance matrices. High frequency synchronization ensures protocol integrity.
+                Reports provide valuable insights into attendance, fees, and achievements to help manage the academy effectively.
              </p>
           </div>
         </div>

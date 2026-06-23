@@ -98,7 +98,7 @@ const Students: React.FC = () => {
       setStudents(enrichedStudents);
     } catch (error) {
       console.error('Error fetching students:', error);
-      toast.error('Tactical failure: Directory inaccessible');
+      toast.error('Failed to load student directory.');
     } finally {
       setLoading(false);
     }
@@ -124,10 +124,10 @@ const Students: React.FC = () => {
     try {
       const { error } = await supabase.from('students').insert([data]);
       if (error) throw error;
-      toast.success('New warrior enlisted');
+      toast.success('Student registered successfully.');
       fetchStudents();
     } catch (error) {
-      toast.error('Enlistment failed');
+      toast.error('Failed to register student.');
     }
   };
 
@@ -136,11 +136,11 @@ const Students: React.FC = () => {
     try {
       const { error } = await supabase.from('students').update(data).eq('id', editingStudent.id);
       if (error) throw error;
-      toast.success('Warrior dossier updated');
+      toast.success('Student details updated successfully.');
       fetchStudents();
       setEditingStudent(undefined);
     } catch (error) {
-      toast.error('Update failed');
+      toast.error('Failed to update student details.');
     }
   };
 
@@ -315,8 +315,8 @@ const Students: React.FC = () => {
                     <h3 className="text-2xl font-black text-white italic transition-all group-hover:text-emerald-500 uppercase tracking-tighter truncate leading-none mb-3">{student.name}</h3>
                     <div className="flex flex-wrap items-center gap-3">
                       {student.fee_status === 'paid' ? 
-                        <div className="flex items-center gap-1.5 text-[8px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" /> Ledger Fixed</div> :
-                        <div className="flex items-center gap-1.5 text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 px-2 py-1 rounded-md border border-rose-500/20"><AlertTriangle className="w-3 h-3" /> Fee Alert</div>
+                        <div className="flex items-center gap-1.5 text-[8px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" /> Paid</div> :
+                        <div className="flex items-center gap-1.5 text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 px-2 py-1 rounded-md border border-rose-500/20"><AlertTriangle className="w-3 h-3" /> Unpaid</div>
                       }
                       {student.student_type && (
                         <div className={cn(
@@ -334,21 +334,21 @@ const Students: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4 mb-8">
                   <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Phone</p>
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Phone Number</p>
                     <p className="text-xs font-black text-white/70 italic leading-none">{student.phone}</p>
                   </div>
                   <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Age / DOB</p>
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Age & DOB</p>
                     <p className="text-xs font-black text-white/70 italic leading-none">
                       {student.age} Yrs {student.dob && `(${safeFormatDate(student.dob, 'dd/MM')})`}
                     </p>
                   </div>
                   <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Class (Std)</p>
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Class (Grade)</p>
                     <p className="text-xs font-black text-white/70 italic leading-none truncate">{student.class_std || 'N/A'}</p>
                   </div>
                   <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Father's Phone (Emerg)</p>
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Father's Phone</p>
                     <p className="text-xs font-black text-white/70 italic leading-none">{student.parent_phone}</p>
                   </div>
                   {student.mothers_name && (
@@ -361,14 +361,14 @@ const Students: React.FC = () => {
 
                 <div className="flex items-center justify-between pt-10 border-t border-white/5">
                    <div className="space-y-3">
-                      <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em]">Honor Rank</p>
+                      <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em]">Rank</p>
                       <div className={cn("px-6 py-2.5 rounded-xl border font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-3", beltColors[student.belt_level].bg, beltColors[student.belt_level].border, beltColors[student.belt_level].text, beltColors[student.belt_level].glow)}>
                          <Award className="w-4 h-4" />
                          {student.belt_level}
                       </div>
                    </div>
                    <div className="text-right">
-                      <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] mb-2">Ledger</p>
+                      <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] mb-2">Monthly Fee</p>
                       <p className="text-3xl font-black text-white group-hover:text-emerald-400 transition-all italic tracking-tighter leading-none">₹{student.fee_amount}</p>
                    </div>
                 </div>

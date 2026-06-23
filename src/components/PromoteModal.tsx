@@ -33,7 +33,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
 
   const handlePromote = async () => {
     if (!student) return;
-    const loadToast = toast.loading('Initiating rank advancement protocol...');
+    const loadToast = toast.loading('Updating student rank...');
     try {
       setLoading(true);
       
@@ -55,11 +55,11 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
       
       if (updateError) throw updateError;
 
-      toast.success('Rank synchronized. Honor updated.', { id: loadToast });
+      toast.success('Rank upgraded successfully.', { id: loadToast });
       onPromoted();
       onClose();
     } catch (error) {
-      toast.error('Rank advancement failed.', { id: loadToast });
+      toast.error('Failed to upgrade rank.', { id: loadToast });
     } finally {
       setLoading(false);
     }
@@ -91,7 +91,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
                   </div>
                   <div>
                     <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white leading-none">Rank <span className="text-emerald-500">Upgrade</span></h3>
-                    <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.4em] mt-1.5">Honor Progression Protocol</p>
+                    <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.4em] mt-1.5">Rank Upgrade Details</p>
                   </div>
                 </div>
                 <button 
@@ -106,7 +106,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
               <div className="space-y-8">
                 <div className="p-6 bg-white/[0.02] rounded-[2rem] border border-white/5 relative overflow-hidden group">
                   <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-3 relative z-10">Active Practitioner</p>
+                  <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em] mb-3 relative z-10">Student Name</p>
                   <p className="text-xl font-black text-white italic uppercase tracking-tight relative z-10">{student.name}</p>
                   <div className="flex items-center gap-2 mt-2 relative z-10">
                     <Zap className="w-3 h-3 text-emerald-500" />
@@ -116,7 +116,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
 
                 <div className="space-y-6">
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1 block">New Rank Designation</label>
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1 block">Select New Rank</label>
                     <div className="grid grid-cols-2 gap-3">
                       {belts.map(belt => (
                         <button
@@ -136,7 +136,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
                   </div>
 
                   <div className="space-y-4">
-                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1 block">Effective Date</label>
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1 block">Upgrade Date</label>
                     <div className="relative group/input">
                       <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within/input:text-emerald-500 transition-colors" />
                       <input
@@ -157,7 +157,7 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                  <span>{loading ? 'Processing...' : 'Authorize Rank'}</span>
+                  <span>{loading ? 'Processing...' : 'Update Rank'}</span>
                 </button>
               </div>
             </motion.div>

@@ -118,7 +118,7 @@ const Attendance: React.FC = () => {
 
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Tactical failure: Logic feed disrupted');
+      toast.error('Failed to load attendance data.');
     } finally {
       setLoading(false);
     }
@@ -130,7 +130,7 @@ const Attendance: React.FC = () => {
       newAttendance[s.id] = status;
     });
     setAttendance(newAttendance);
-    toast.success(`Protocol: Mark all ${status}`);
+    toast.success(`Marked all as ${status}`);
   };
 
   const handleSave = async () => {
@@ -145,7 +145,7 @@ const Attendance: React.FC = () => {
         }));
 
       if (records.length === 0) {
-         toast.error('No registry modifications detected');
+         toast.error('No attendance changes to save');
          return;
       }
 
@@ -154,9 +154,9 @@ const Attendance: React.FC = () => {
         .upsert(records, { onConflict: 'student_id, date' });
       
       if (error) throw error;
-      toast.success('Registry synchronized successfully');
+      toast.success('Attendance saved successfully');
     } catch (error) {
-      toast.error('Registry synchronization failed');
+      toast.error('Failed to save attendance');
     } finally {
       setSaving(false);
     }
@@ -204,7 +204,7 @@ const Attendance: React.FC = () => {
              <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Session Attendance</p>
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Attendance <span className="text-emerald-500 text-glow">Logs</span>
+            Attendance <span className="text-emerald-500 text-glow">Sheet</span>
           </h2>
           <div className="flex items-center gap-6 mt-8">
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
@@ -257,9 +257,9 @@ const Attendance: React.FC = () => {
             
             <div className="space-y-8">
                {[
-                 { label: 'Deployed', value: currentStats.present, color: 'text-emerald-400', pct: Math.round(currentStats.present/currentStats.total*100) || 0 },
+                 { label: 'Present', value: currentStats.present, color: 'text-emerald-400', pct: Math.round(currentStats.present/currentStats.total*100) || 0 },
                  { label: 'Absent', value: currentStats.absent, color: 'text-rose-500', pct: Math.round(currentStats.absent/currentStats.total*100) || 0 },
-                 { label: 'Remaining', value: currentStats.total - (currentStats.present + currentStats.absent), color: 'text-white/10', pct: Math.round((currentStats.total - currentStats.present - currentStats.absent)/currentStats.total*100) || 0 },
+                 { label: 'Not Marked', value: currentStats.total - (currentStats.present + currentStats.absent), color: 'text-white/10', pct: Math.round((currentStats.total - currentStats.present - currentStats.absent)/currentStats.total*100) || 0 },
                ].map((item, i) => (
                  <div key={i} className="space-y-3">
                     <div className="flex justify-between items-end">

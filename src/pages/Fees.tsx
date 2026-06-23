@@ -86,7 +86,7 @@ const Fees: React.FC = () => {
 
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Fiscal Uplink Error: Data feed compromised');
+      toast.error('Failed to load payment data.');
     } finally {
       setLoading(false);
     }
@@ -126,10 +126,10 @@ const Fees: React.FC = () => {
       
       if (error) throw error;
       
-      toast.success('Funds authorized. Ledger updated.', { id: loadingToast });
+      toast.success('Payment recorded successfully.', { id: loadingToast });
       fetchData();
     } catch (error) {
-      toast.error('Transaction failed. Protocol denied.', { id: loadingToast });
+      toast.error('Payment failed.', { id: loadingToast });
     }
   };
 
@@ -160,7 +160,7 @@ const Fees: React.FC = () => {
              <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Fees Management</p>
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Fees <span className="text-emerald-500 text-glow">Ledger</span>
+            Fees <span className="text-emerald-500 text-glow">Status</span>
           </h2>
           <div className="flex items-center gap-6 mt-8">
             <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
@@ -200,7 +200,7 @@ const Fees: React.FC = () => {
             bg: 'bg-rose-500/10'
           },
           { 
-            label: 'Success Coefficient', 
+            label: 'Collection Rate', 
             value: `${rate}%`, 
             icon: History, 
             color: 'text-sky-400', 
@@ -233,7 +233,7 @@ const Fees: React.FC = () => {
           <div className="glass-card !p-10 !rounded-[3rem] space-y-10 border-white/5 bg-gradient-to-br from-white/[0.01] to-transparent">
              <div className="flex items-center gap-4">
                 <BarChart3 className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-sm font-black italic uppercase tracking-widest text-white/60">Revenue Cycles</h3>
+                <h3 className="text-sm font-black italic uppercase tracking-widest text-white/60">Revenue Trends</h3>
              </div>
              <div className="flex items-end justify-between gap-4 h-48">
                 {revenueTrends.map((t, i) => {
@@ -291,7 +291,7 @@ const Fees: React.FC = () => {
               <Search className="w-5 h-5 text-white/10" />
               <input 
                 type="text" 
-                placeholder="Locate practitioner by fiscal identity..."
+                placeholder="Search student by name..."
                 className="bg-transparent flex-1 font-bold text-white placeholder:text-white/10 focus:outline-none"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -336,7 +336,7 @@ const Fees: React.FC = () => {
                              <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2">
                                    <Zap className="w-3 h-3 text-emerald-500" />
-                                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest italic tracking-tighter">Commitment: ₹{student.fee_amount.toLocaleString()}</p>
+                                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest italic tracking-tighter">Fee: ₹{student.fee_amount.toLocaleString()}</p>
                                 </div>
                              </div>
                           </div>
@@ -351,7 +351,7 @@ const Fees: React.FC = () => {
                                  animate={{ opacity: 1, scale: 1 }}
                                  className="px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(16,185,129,0.1)]"
                                >
-                                  Synchronized
+                                  Paid
                                </motion.div>
                              ) : (
                                <motion.div 
@@ -360,7 +360,7 @@ const Fees: React.FC = () => {
                                  animate={{ opacity: 1, scale: 1 }}
                                  className="px-6 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[9px] font-black uppercase tracking-[0.2em]"
                                >
-                                  Outstanding
+                                  Pending
                                </motion.div>
                              )}
                           </AnimatePresence>
@@ -372,7 +372,7 @@ const Fees: React.FC = () => {
                                  className="btn-primary !h-12 !px-8 text-[9px] font-black uppercase shadow-lg shadow-emerald-500/20"
                                >
                                   <DollarSign className="w-3.5 h-3.5" />
-                                  Resolve
+                                  Pay
                                </button>
                              ) : (
                                <button className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 text-white/20 hover:text-white transition-all flex items-center justify-center">
