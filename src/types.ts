@@ -2,6 +2,10 @@ export interface Student {
   id: string;
   name: string;
   age: number;
+  mothers_name?: string;
+  dob?: string;
+  class_std?: string;
+  student_type?: 'New' | 'Old';
   phone: string;
   parent_phone: string;
   address: string;

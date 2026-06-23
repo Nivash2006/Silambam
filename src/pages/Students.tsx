@@ -58,6 +58,13 @@ const Students: React.FC = () => {
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
   const [promotingStudent, setPromotingStudent] = useState<Student | null>(null);
 
+  const safeFormatDate = (dateStr?: string, formatPattern: string = 'dd/MM/yyyy') => {
+    if (!dateStr) return 'N/A';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return format(d, formatPattern);
+  };
+
   useEffect(() => {
     fetchStudents();
   }, []);
@@ -140,7 +147,9 @@ const Students: React.FC = () => {
   const filteredAndSorted = students
     .filter(s => {
       const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
-                          s.belt_level.toLowerCase().includes(search.toLowerCase());
+                          s.belt_level.toLowerCase().includes(search.toLowerCase()) ||
+                          (s.class_std || '').toLowerCase().includes(search.toLowerCase()) ||
+                          (s.mothers_name || '').toLowerCase().includes(search.toLowerCase());
       const matchesBelt = beltFilter === 'All' || s.belt_level === beltFilter;
       const matchesFee = feeFilter === 'All' || s.fee_status === feeFilter.toLowerCase();
       return matchesSearch && matchesBelt && matchesFee;
@@ -204,7 +213,7 @@ const Students: React.FC = () => {
               <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
               <input
                 type="text"
-                placeholder="Search by name, rank, or phone..."
+                placeholder="Search by name, rank, class, phone, or mother's name..."
                 className="bg-transparent w-full pl-16 pr-8 h-16 text-lg font-bold text-white placeholder:text-white/10 focus:outline-none"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -304,24 +313,50 @@ const Students: React.FC = () => {
                   </div>
                   <div className="min-w-0 pb-2">
                     <h3 className="text-2xl font-black text-white italic transition-all group-hover:text-emerald-500 uppercase tracking-tighter truncate leading-none mb-3">{student.name}</h3>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       {student.fee_status === 'paid' ? 
                         <div className="flex items-center gap-1.5 text-[8px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" /> Ledger Fixed</div> :
                         <div className="flex items-center gap-1.5 text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 px-2 py-1 rounded-md border border-rose-500/20"><AlertTriangle className="w-3 h-3" /> Fee Alert</div>
                       }
+                      {student.student_type && (
+                        <div className={cn(
+                          "flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md border",
+                          student.student_type === 'New'
+                            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                            : "text-blue-400 bg-blue-500/10 border-blue-500/20"
+                        )}>
+                          {student.student_type} Student
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-10">
-                  <div className="glass-card !p-5 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-2">Comms</p>
-                    <p className="text-sm font-black text-white/60 italic leading-none">{student.phone}</p>
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Phone</p>
+                    <p className="text-xs font-black text-white/70 italic leading-none">{student.phone}</p>
                   </div>
-                  <div className="glass-card !p-5 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-2">Cycle</p>
-                    <p className="text-sm font-black text-white/60 italic leading-none">{student.age} Years</p>
+                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Age / DOB</p>
+                    <p className="text-xs font-black text-white/70 italic leading-none">
+                      {student.age} Yrs {student.dob && `(${safeFormatDate(student.dob, 'dd/MM')})`}
+                    </p>
                   </div>
+                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Class (Std)</p>
+                    <p className="text-xs font-black text-white/70 italic leading-none truncate">{student.class_std || 'N/A'}</p>
+                  </div>
+                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Father's Phone (Emerg)</p>
+                    <p className="text-xs font-black text-white/70 italic leading-none">{student.parent_phone}</p>
+                  </div>
+                  {student.mothers_name && (
+                    <div className="col-span-2 glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                      <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Mother's Name</p>
+                      <p className="text-xs font-black text-white/70 italic leading-none truncate">{student.mothers_name}</p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between pt-10 border-t border-white/5">

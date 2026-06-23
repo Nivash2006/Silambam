@@ -3,6 +3,10 @@ CREATE TABLE students (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     age INTEGER,
+    mothers_name TEXT,
+    dob DATE,
+    class_std TEXT,
+    student_type TEXT DEFAULT 'New', -- 'New' or 'Old'
     phone TEXT,
     parent_phone TEXT,
     address TEXT,
