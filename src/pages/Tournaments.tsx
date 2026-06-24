@@ -22,7 +22,9 @@ import {
   DownloadCloud,
   Users2,
   Tag,
-  AlertCircle
+  AlertCircle,
+  Trash2,
+  Edit2
 } from 'lucide-react';
 import { Student, TournamentRecord, UpcomingTournament, TournamentRegistration } from '../types';
 import { supabase } from '../lib/supabase';
@@ -31,8 +33,9 @@ import toast from 'react-hot-toast';
 import Portal from '../components/Portal';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import StudentForm from '../components/StudentForm';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -69,6 +72,14 @@ const Tournaments: React.FC = () => {
   });
   const [selectedUpcoming, setSelectedUpcoming] = useState<UpcomingTournament | null>(null);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
+  // Student detail modal states
+  const [selectedStudentForDetail, setSelectedStudentForDetail] = useState<Student | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  // Student Edit/Delete states (from T-shirt tab)
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [isStudentFormOpen, setIsStudentFormOpen] = useState(false);
 
   // T-Shirt status counts
   const [tshirtSearch, setTshirtSearch] = useState('');
@@ -192,8 +203,8 @@ const Tournaments: React.FC = () => {
       if (error) throw error;
       toast.success('Student registered successfully.');
       fetchRegistrations();
-    } catch (err) {
-      toast.error('Student already registered.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to register student.');
     }
   };
 
@@ -243,6 +254,74 @@ const Tournaments: React.FC = () => {
     }
   };
 
+  // Delete Achievement Record
+  const handleDeleteAchievement = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this achievement record?")) return;
+    try {
+      const { error } = await supabase
+        .from('tournaments')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      toast.success('Achievement deleted successfully.');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to delete achievement.');
+    }
+  };
+
+  // Delete Upcoming Tournament and registrations
+  const handleDeleteUpcoming = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this tournament? All student registrations for this event will also be deleted.")) return;
+    const loadToast = toast.loading('Deleting tournament...');
+    try {
+      await supabase.from('tournament_registrations').delete().eq('tournament_id', id);
+      const { error } = await supabase.from('upcoming_tournaments').delete().eq('id', id);
+      if (error) throw error;
+      toast.success('Tournament deleted successfully.', { id: loadToast });
+      setSelectedUpcoming(null);
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to delete tournament.', { id: loadToast });
+    }
+  };
+
+  // Delete Student
+  const handleDeleteStudent = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this student? All attendance, fees, and achievement records for this student will also be deleted.")) return;
+    const loadToast = toast.loading('Deleting student...');
+    try {
+      const { error } = await supabase
+        .from('students')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      toast.success('Student deleted successfully.', { id: loadToast });
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to delete student.', { id: loadToast });
+    }
+  };
+
+  // Submit edit for student
+  const handleEditStudentSubmit = async (data: Omit<Student, 'id' | 'fee_status' | 'created_at'>) => {
+    if (!editingStudent) return;
+    const loadToast = toast.loading('Updating student details...');
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update(data)
+        .eq('id', editingStudent.id);
+      if (error) throw error;
+      toast.success('Student details updated successfully.', { id: loadToast });
+      setIsStudentFormOpen(false);
+      setEditingStudent(null);
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to update student details.', { id: loadToast });
+    }
+  };
+
   // PDF Export for Upcoming Tournament
   const handleDownloadRosterPDF = (tournament: UpcomingTournament, list: TournamentRegistration[]) => {
     const doc = new jsPDF();
@@ -272,7 +351,7 @@ const Tournaments: React.FC = () => {
       reg.fee_status === 'paid' ? 'Paid' : 'Pending'
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: headers,
       body: data,
       startY: 56,
@@ -451,7 +530,13 @@ const Tournaments: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.05 }}
                         key={t.id} 
-                        className="glass-card group hover:scale-[1.02] transition-all duration-700 border-white/5 !rounded-[3rem] !p-10 relative overflow-hidden"
+                        onClick={() => {
+                          if (student) {
+                            setSelectedStudentForDetail(student);
+                            setIsDetailModalOpen(true);
+                          }
+                        }}
+                        className="glass-card group hover:scale-[1.02] transition-all duration-700 border-white/5 !rounded-[3rem] !p-10 relative overflow-hidden cursor-pointer"
                       >
                         <div className={cn(
                           "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none",
@@ -479,13 +564,21 @@ const Tournaments: React.FC = () => {
                                   <Calendar className="w-4 h-4 text-emerald-500/50" /> {t.date}
                                 </span>
                                 <div className="w-1.5 h-1.5 rounded-full bg-white/[0.05]" />
-                                <span className="flex items-center gap-2.5 text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">
-                                  <Target className="w-4 h-4" /> {student?.name || 'Grandmaster'}
+                                <span className="flex items-center gap-2.5 text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] cursor-pointer hover:text-emerald-400 transition-colors">
+                                  {student?.photo_url ? (
+                                    <img src={student.photo_url} className="w-6 h-6 rounded-full object-cover border border-emerald-500/20" alt="" />
+                                  ) : (
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[8px] font-black text-emerald-400">
+                                      {student?.name?.charAt(0) || 'G'}
+                                    </div>
+                                  )}
+                                  {student?.name || 'Grandmaster'} 
+                                  {student?.class_std && <span className="text-white/30 font-normal">({student.class_std})</span>}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-right shrink-0 w-full md:w-auto">
+                          <div className="text-right shrink-0 w-full md:w-auto flex items-center justify-end gap-4 z-20">
                             <span className={cn(
                               "inline-flex items-center gap-4 text-[11px] font-black px-10 py-5 rounded-[1.5rem] uppercase tracking-[0.3em] border transition-all duration-500 w-full md:w-auto justify-center",
                               isGold ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 shadow-xl' :
@@ -496,6 +589,16 @@ const Tournaments: React.FC = () => {
                               {isGold && <Star className="w-5 h-5 animate-pulse" />}
                               {t.position === 'Participation' ? 'Participation' : `${t.position} Place`}
                             </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAchievement(t.id);
+                              }}
+                              className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center"
+                              title="Delete Achievement"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       </motion.div>
@@ -590,7 +693,19 @@ const Tournaments: React.FC = () => {
                         <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
                           <Calendar className="w-6 h-6 text-emerald-500" />
                         </div>
-                        <ArrowUpRight className="w-5 h-5 text-white/20 group-hover:text-emerald-500 transition-colors" />
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteUpcoming(ut.id);
+                            }}
+                            className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center relative z-20"
+                            title="Delete Tournament"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          <ArrowUpRight className="w-5 h-5 text-white/20 group-hover:text-emerald-500 transition-colors" />
+                        </div>
                       </div>
                       
                       <h4 className="text-2xl font-black text-white italic uppercase tracking-tight group-hover:text-emerald-400 transition-colors mb-3">{ut.name}</h4>
@@ -659,6 +774,13 @@ const Tournaments: React.FC = () => {
                     >
                       <Plus className="w-5 h-5" />
                       Register Students
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteUpcoming(selectedUpcoming.id)}
+                      className="w-14 h-14 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shrink-0"
+                      title="Delete Tournament"
+                    >
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   </div>
                 </div>
@@ -807,9 +929,9 @@ const Tournaments: React.FC = () => {
                           onChange={(e) => handleUpdateTshirt(student.id, { tshirt_size: e.target.value })}
                           className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
                         >
-                          <option value="None">None</option>
+                          <option value="None" className="bg-[#0f172a] text-white">None</option>
                           {['22', '24', '26', '28', '30', '32', '34', '36', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
-                            <option key={sz} value={sz}>Size {sz}</option>
+                            <option key={sz} value={sz} className="bg-[#0f172a] text-white">Size {sz}</option>
                           ))}
                         </select>
                       </div>
@@ -824,13 +946,34 @@ const Tournaments: React.FC = () => {
                           onChange={(e) => handleUpdateTshirt(student.id, { tshirt_status: e.target.value as any })}
                           className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
                         >
-                          <option value="None">None</option>
-                          <option value="Wants">Wants T-Shirt</option>
-                          <option value="Already Has">Already Has</option>
-                          <option value="Bought (Paid)">Bought (Paid)</option>
-                          <option value="Bought (Unpaid)">Bought (Unpaid)</option>
+                          <option value="None" className="bg-[#0f172a] text-white">None</option>
+                          <option value="Wants" className="bg-[#0f172a] text-white">Wants T-Shirt</option>
+                          <option value="Already Has" className="bg-[#0f172a] text-white">Already Has</option>
+                          <option value="Bought (Paid)" className="bg-[#0f172a] text-white">Bought (Paid)</option>
+                          <option value="Bought (Unpaid)" className="bg-[#0f172a] text-white">Bought (Unpaid)</option>
                         </select>
                       </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 self-end mt-4 md:mt-0">
+                      <button
+                        onClick={() => {
+                          setEditingStudent(student);
+                          setIsStudentFormOpen(true);
+                        }}
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center"
+                        title="Edit Student"
+                      >
+                        <Edit2 className="w-4.5 h-4.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStudent(student.id)}
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center"
+                        title="Delete Student"
+                      >
+                        <Trash2 className="w-4.5 h-4.5" />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1115,6 +1258,106 @@ const Tournaments: React.FC = () => {
                       All students are registered for this event.
                     </div>
                   )}
+                </div>
+              </motion.div>
+            </div>
+          </Portal>
+        )}
+      </AnimatePresence>
+
+      {/* Student Edit Form Modal (from T-shirt management) */}
+      {isStudentFormOpen && (
+        <StudentForm
+          isOpen={isStudentFormOpen}
+          onClose={() => {
+            setIsStudentFormOpen(false);
+            setEditingStudent(null);
+          }}
+          onSubmit={handleEditStudentSubmit}
+          initialData={editingStudent || undefined}
+        />
+      )}
+
+      {/* Student Details Modal */}
+      <AnimatePresence>
+        {isDetailModalOpen && selectedStudentForDetail && (
+          <Portal>
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => { setIsDetailModalOpen(false); setSelectedStudentForDetail(null); }}
+                className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
+                style={{ position: 'fixed' }}
+              />
+              
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                className="glass-card !rounded-[4rem] w-full max-w-xl relative z-20 border-white/10 !p-12 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto max-h-[90vh] flex flex-col"
+              >
+                <div className="flex items-center justify-between mb-8 shrink-0">
+                  <h3 className="text-3xl font-black italic uppercase text-white leading-none">Student <span className="text-emerald-500">Details</span></h3>
+                  <button 
+                    type="button"
+                    onClick={() => { setIsDetailModalOpen(false); setSelectedStudentForDetail(null); }}
+                    className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all border border-white/5"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar space-y-8">
+                  {/* Photo and Header Info */}
+                  <div className="flex items-center gap-6 pb-6 border-b border-white/5">
+                    <div className="relative shrink-0">
+                      {selectedStudentForDetail.photo_url ? (
+                        <img 
+                          src={selectedStudentForDetail.photo_url} 
+                          alt={selectedStudentForDetail.name} 
+                          className="w-24 h-24 rounded-3xl object-cover border-2 border-emerald-500/20"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-3xl bg-white/5 flex items-center justify-center text-3xl font-black text-white/20">
+                          {selectedStudentForDetail.name.charAt(0)}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="text-2xl font-black text-white italic uppercase tracking-tight">{selectedStudentForDetail.name}</h4>
+                      <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mt-1">{selectedStudentForDetail.belt_level} Belt</p>
+                      <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Class: {selectedStudentForDetail.class_std || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { label: 'Age', value: `${selectedStudentForDetail.age} Years` },
+                      { label: 'Student Type', value: `${selectedStudentForDetail.student_type || 'New'} Student` },
+                      { label: 'Phone', value: selectedStudentForDetail.phone || 'N/A' },
+                      { label: 'Parent Phone', value: selectedStudentForDetail.parent_phone || 'N/A' },
+                      { label: 'Mother\'s Name', value: selectedStudentForDetail.mothers_name || 'N/A' },
+                      { label: 'Date of Birth', value: selectedStudentForDetail.dob || 'N/A' },
+                      { label: 'Joining Date', value: selectedStudentForDetail.joining_date || 'N/A' },
+                      { label: 'Fee Amount', value: `₹${selectedStudentForDetail.fee_amount}` },
+                      { label: 'T-Shirt Size', value: selectedStudentForDetail.tshirt_size || 'None' },
+                      { label: 'T-Shirt Status', value: selectedStudentForDetail.tshirt_status || 'None' },
+                    ].map((item, idx) => (
+                      <div key={idx} className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl">
+                        <span className="text-[8px] font-black text-white/20 uppercase tracking-wider block mb-1">{item.label}</span>
+                        <span className="text-xs font-bold text-white/80">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Address */}
+                  <div className="bg-white/[0.01] border border-white/5 p-4 rounded-2xl col-span-2">
+                    <span className="text-[8px] font-black text-white/20 uppercase tracking-wider block mb-1">Address</span>
+                    <span className="text-xs font-bold text-white/80">{selectedStudentForDetail.address || 'N/A'}</span>
+                  </div>
                 </div>
               </motion.div>
             </div>

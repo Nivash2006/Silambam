@@ -23,7 +23,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
 import Portal from '../components/Portal';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -200,7 +200,7 @@ const Attendance: React.FC = () => {
       attendance[s.id] === 'present' ? 'Present' : attendance[s.id] === 'absent' ? 'Absent' : 'Not Marked'
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: headers,
       body: data,
       startY: 42,
@@ -272,7 +272,7 @@ const Attendance: React.FC = () => {
         return row;
       });
 
-      doc.autoTable({
+      autoTable(doc, {
         head: headers,
         body: data,
         startY: 42,
@@ -335,7 +335,7 @@ const Attendance: React.FC = () => {
         ];
       });
 
-      doc.autoTable({
+      autoTable(doc, {
         head: headers,
         body: data,
         startY: 42,
@@ -523,38 +523,44 @@ const Attendance: React.FC = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: idx * 0.03 }}
                       key={student.id}
-                      className="glass-card group flex items-center gap-8 py-6 px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2.5rem]"
+                      onClick={() => setAttendance(p => ({ ...p, [student.id]: status === 'present' ? null : 'present' }))}
+                      className="glass-card group flex items-center justify-between gap-8 py-6 px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2.5rem] cursor-pointer"
                     >
-                       <div className="relative shrink-0">
-                          <div className="w-16 h-16 rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
-                             {student.photo_url ? (
-                               <img src={student.photo_url} className="w-full h-full object-cover" alt="" />
-                             ) : (
-                               <span className="text-xl font-black text-white/10 uppercase">{student.name.charAt(0)}</span>
-                             )}
+                       <div className="flex items-center gap-6 flex-1 min-w-0">
+                          <div className="relative shrink-0">
+                             <div className="w-16 h-16 rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
+                                {student.photo_url ? (
+                                  <img src={student.photo_url} className="w-full h-full object-cover" alt="" />
+                                ) : (
+                                  <span className="text-xl font-black text-white/10 uppercase">{student.name.charAt(0)}</span>
+                                )}
+                             </div>
+                             <div className={cn(
+                               "absolute -top-2 -right-2 w-6 h-6 rounded-full border-2 border-[#0B0F0C] z-10",
+                               status === 'present' ? "bg-emerald-500" : status === 'absent' ? "bg-rose-500" : "bg-white/10"
+                             )} />
                           </div>
-                          <div className={cn(
-                            "absolute -top-2 -right-2 w-6 h-6 rounded-full border-2 border-[#0B0F0C] z-10",
-                            status === 'present' ? "bg-emerald-500" : status === 'absent' ? "bg-rose-500" : "bg-white/10"
-                          )} />
-                       </div>
 
-                       <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-4 mb-2">
-                             <h4 className="text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
-                             <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">{student.belt_level}</span>
-                          </div>
-                          <div className="flex items-center gap-6">
-                             <div className="flex items-center gap-2">
-                                <Zap className="w-3 h-3 text-emerald-500" />
-                                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{pRate}% Consistency</p>
+                          <div className="flex-1 min-w-0">
+                             <div className="flex items-center gap-4 mb-2">
+                                <h4 className="text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
+                                <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">{student.belt_level}</span>
+                             </div>
+                             <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                   <Zap className="w-3 h-3 text-emerald-500" />
+                                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{pRate}% Consistency</p>
+                                </div>
                              </div>
                           </div>
                        </div>
 
                        <div className="flex items-center gap-3">
                           <button 
-                            onClick={() => setAttendance(p => ({ ...p, [student.id]: 'present' }))}
+                            onClick={(e) => {
+                               e.stopPropagation();
+                               setAttendance(p => ({ ...p, [student.id]: status === 'present' ? null : 'present' }));
+                            }}
                             className={cn(
                               "w-12 h-12 rounded-xl transition-all flex items-center justify-center border",
                               status === 'present' ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20" : "bg-white/[0.02] border-white/5 text-white/20 hover:text-emerald-400 hover:border-emerald-500/20"
@@ -563,7 +569,10 @@ const Attendance: React.FC = () => {
                              <Check className="w-5 h-5" />
                           </button>
                           <button 
-                            onClick={() => setAttendance(p => ({ ...p, [student.id]: 'absent' }))}
+                            onClick={(e) => {
+                               e.stopPropagation();
+                               setAttendance(p => ({ ...p, [student.id]: status === 'absent' ? null : 'absent' }));
+                            }}
                             className={cn(
                               "w-12 h-12 rounded-xl transition-all flex items-center justify-center border",
                               status === 'absent' ? "bg-rose-500 border-transparent text-white shadow-lg shadow-rose-500/20" : "bg-white/[0.02] border-white/5 text-white/20 hover:text-rose-400 hover:border-rose-500/20"
@@ -572,7 +581,10 @@ const Attendance: React.FC = () => {
                              <X className="w-5 h-5" />
                           </button>
                           <button 
-                            onClick={() => setAttendance(p => ({ ...p, [student.id]: null }))}
+                            onClick={(e) => {
+                               e.stopPropagation();
+                               setAttendance(p => ({ ...p, [student.id]: null }));
+                            }}
                             className="w-12 h-12 rounded-xl bg-white/[0.01] border border-white/5 text-white/10 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group/reset"
                           >
                             <RotateCcw className="w-4 h-4 group-hover/reset:rotate-180 transition-transform duration-700" />

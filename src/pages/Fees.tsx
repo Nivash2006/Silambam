@@ -16,13 +16,17 @@ import {
   Calendar,
   ChevronRight,
   Zap,
-  DollarSign
+  DollarSign,
+  Edit2,
+  Trash2,
+  X
 } from 'lucide-react';
 import { Student, FeePayment } from '../types';
 import { supabase } from '../lib/supabase';
-import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import { format, subMonths, startOfDay, endOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
+import Portal from '../components/Portal';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -40,6 +44,15 @@ const Fees: React.FC = () => {
   const [revenueTrends, setRevenueTrends] = useState<any[]>([]);
   
   const currentMonth = format(new Date(), 'MMMM yyyy');
+  
+  // Payment editing states
+  const [editingPayment, setEditingPayment] = useState<{ studentName: string; payment: FeePayment } | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    amount: '',
+    payment_date: '',
+    method: 'cash' as 'cash' | 'online'
+  });
 
   useEffect(() => {
     fetchData();
@@ -130,6 +143,60 @@ const Fees: React.FC = () => {
       fetchData();
     } catch (error) {
       toast.error('Payment failed.', { id: loadingToast });
+    }
+  };
+
+  const openEditModal = (studentName: string, payment: FeePayment) => {
+    setEditingPayment({ studentName, payment });
+    setEditForm({
+      amount: payment.amount.toString(),
+      payment_date: payment.payment_date || format(new Date(), 'yyyy-MM-dd'),
+      method: payment.method || 'cash'
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdatePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+    const loadToast = toast.loading('Updating payment details...');
+    try {
+      const { error } = await supabase
+        .from('fees')
+        .update({
+          amount: parseInt(editForm.amount) || 0,
+          payment_date: editForm.payment_date,
+          method: editForm.method
+        })
+        .eq('id', editingPayment.payment.id);
+      
+      if (error) throw error;
+      toast.success('Payment details updated successfully.', { id: loadToast });
+      setIsEditModalOpen(false);
+      setEditingPayment(null);
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to update payment details.', { id: loadToast });
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!editingPayment) return;
+    if (!window.confirm(`Are you sure you want to delete the payment for ${editingPayment.studentName}? This will set their status back to Pending.`)) return;
+    const loadToast = toast.loading('Reverting payment...');
+    try {
+      const { error } = await supabase
+        .from('fees')
+        .delete()
+        .eq('id', editingPayment.payment.id);
+      
+      if (error) throw error;
+      toast.success('Payment reverted successfully.', { id: loadToast });
+      setIsEditModalOpen(false);
+      setEditingPayment(null);
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to revert payment.', { id: loadToast });
     }
   };
 
@@ -302,6 +369,7 @@ const Fees: React.FC = () => {
               <AnimatePresence mode="popLayout">
                 {filteredStudents.map((student, idx) => {
                   const status = getStudentStatus(student.id);
+                  const payment = payments.find(p => p.student_id === student.id);
                   return (
                     <motion.div 
                       layout
@@ -375,8 +443,16 @@ const Fees: React.FC = () => {
                                   Pay
                                </button>
                              ) : (
-                               <button className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 text-white/20 hover:text-white transition-all flex items-center justify-center">
-                                  <History className="w-5 h-5" />
+                               <button 
+                                 onClick={() => {
+                                   if (payment) {
+                                     openEditModal(student.name, payment);
+                                   }
+                                 }}
+                                 className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center"
+                                 title="Edit Payment"
+                               >
+                                  <Edit2 className="w-5 h-5" />
                                </button>
                              )}
                           </div>
@@ -388,6 +464,105 @@ const Fees: React.FC = () => {
            </div>
         </div>
       </div>
+
+      {/* Edit Payment Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && editingPayment && (
+          <Portal>
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => { setIsEditModalOpen(false); setEditingPayment(null); }}
+                className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
+                style={{ position: 'fixed' }}
+              />
+              
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                className="glass-card !rounded-[4rem] w-full max-w-md relative z-20 border-white/10 !p-12 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto max-h-[90vh] flex flex-col"
+              >
+                <div className="flex items-center justify-between mb-8 shrink-0">
+                  <div>
+                    <h3 className="text-3xl font-black italic uppercase text-white leading-none">Edit <span className="text-emerald-500">Payment</span></h3>
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-2">{editingPayment.studentName}</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => { setIsEditModalOpen(false); setEditingPayment(null); }}
+                    className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all border border-white/5"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleUpdatePayment} className="space-y-6 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="space-y-4">
+                    {/* Amount */}
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Amount Paid</label>
+                      <input 
+                        type="number"
+                        required
+                        value={editForm.amount}
+                        onChange={(e) => setEditForm(p => ({ ...p, amount: e.target.value }))}
+                        className="bg-black/40 border border-white/5 rounded-xl px-4 py-3 w-full text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                      />
+                    </div>
+
+                    {/* Payment Date */}
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Payment Date</label>
+                      <input 
+                        type="date"
+                        required
+                        value={editForm.payment_date}
+                        onChange={(e) => setEditForm(p => ({ ...p, payment_date: e.target.value }))}
+                        className="bg-black/40 border border-white/5 rounded-xl px-4 py-3 w-full text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                      />
+                    </div>
+
+                    {/* Method */}
+                    <div className="space-y-2">
+                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Payment Method</label>
+                      <select
+                        value={editForm.method}
+                        onChange={(e) => setEditForm(p => ({ ...p, method: e.target.value as any }))}
+                        className="bg-black/40 border border-white/5 rounded-xl px-4 py-3 w-full text-sm font-bold text-white focus:outline-none cursor-pointer"
+                      >
+                        <option value="cash" className="bg-[#0f172a] text-white">Cash</option>
+                        <option value="online" className="bg-[#0f172a] text-white">Online</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4 shrink-0">
+                    <button
+                      type="submit"
+                      className="w-full bg-emerald-500 hover:bg-emerald-400 text-[#05070a] font-black italic uppercase tracking-widest h-14 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-5 h-5" />
+                      Save Changes
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={handleDeletePayment}
+                      className="w-full bg-rose-500/10 hover:bg-rose-500 border border-rose-500/20 hover:text-white text-rose-500 font-black italic uppercase tracking-widest h-14 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      Delete Payment / Revert to Pending
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </div>
+          </Portal>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

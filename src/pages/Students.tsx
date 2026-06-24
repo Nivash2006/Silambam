@@ -17,15 +17,20 @@ import {
   XCircle,
   CreditCard,
   Zap,
-  AlertTriangle
+  AlertTriangle,
+  DownloadCloud,
+  X
 } from 'lucide-react';
 import { Student, BeltLevel } from '../types';
 import StudentForm from '../components/StudentForm';
 import PromoteModal from '../components/PromoteModal';
+import Portal from '../components/Portal';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -57,6 +62,107 @@ const Students: React.FC = () => {
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
   const [promotingStudent, setPromotingStudent] = useState<Student | null>(null);
+
+  // PDF Custom Download States
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [selectedColumns, setSelectedColumns] = useState<Record<string, boolean>>({
+    name: true,
+    age: true,
+    class_std: true,
+    phone: true,
+    belt_level: true,
+    joining_date: true,
+    fee_amount: false,
+    fee_status: false,
+    tshirt_size: false,
+    tshirt_status: false,
+    parent_phone: false,
+    mothers_name: false,
+    dob: false,
+    address: false,
+  });
+
+  const columnOptions = [
+    { key: 'name', label: 'Name' },
+    { key: 'age', label: 'Age' },
+    { key: 'class_std', label: 'Class/Std' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'parent_phone', label: 'Parent Phone' },
+    { key: 'belt_level', label: 'Belt Level' },
+    { key: 'joining_date', label: 'Joining Date' },
+    { key: 'mothers_name', label: 'Mother\'s Name' },
+    { key: 'dob', label: 'Date of Birth' },
+    { key: 'address', label: 'Address' },
+    { key: 'fee_amount', label: 'Fee Amount' },
+    { key: 'fee_status', label: 'Fee Status' },
+    { key: 'tshirt_size', label: 'T-Shirt Size' },
+    { key: 'tshirt_status', label: 'T-Shirt Status' },
+  ];
+
+  const handleExportPDF = () => {
+    const activeColumns = columnOptions.filter(col => selectedColumns[col.key]);
+    if (activeColumns.length === 0) {
+      toast.error('Please select at least one column to export.');
+      return;
+    }
+
+    const loadToast = toast.loading('Generating customized PDF...');
+    try {
+      const orientation = activeColumns.length > 6 ? 'landscape' : 'portrait';
+      const doc = new jsPDF({ orientation });
+      
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(16, 185, 129);
+      doc.text("Maha Silambam Academy", 14, 20);
+
+      doc.setFontSize(12);
+      doc.setTextColor(120, 120, 120);
+      doc.text("STUDENT DIRECTORY REPORT", 14, 28);
+      doc.setFontSize(8);
+      doc.text(`Generated on: ${format(new Date(), 'dd MMMM yyyy HH:mm')}`, 14, 34);
+
+      const headers = [activeColumns.map(col => col.label)];
+      
+      const data = filteredAndSorted.map(student => {
+        return activeColumns.map(col => {
+          const val = student[col.key as keyof Student];
+          if (col.key === 'joining_date' || col.key === 'dob') {
+            return student[col.key as keyof Student] ? format(new Date(student[col.key as keyof Student] as string), 'dd/MM/yyyy') : 'N/A';
+          }
+          if (col.key === 'fee_status') {
+            return student.fee_status === 'paid' ? 'Paid' : 'Pending';
+          }
+          if (col.key === 'tshirt_status') {
+            return student.tshirt_status || 'None';
+          }
+          if (val === undefined || val === null) return 'N/A';
+          return val.toString();
+        });
+      });
+
+      autoTable(doc, {
+        head: headers,
+        body: data,
+        startY: 40,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129], fontStyle: 'bold' },
+        styles: { fontSize: activeColumns.length > 8 ? 7 : 9 }
+      });
+
+      const finalY = (doc as any).lastAutoTable.finalY + 15;
+      doc.setFontSize(9);
+      doc.setTextColor(120, 120, 120);
+      doc.text("Authorized Signature: _______________________", 14, finalY);
+
+      doc.save(`Student_Directory_Custom_${format(new Date(), 'yyyyMMdd')}.pdf`);
+      toast.success('Customized PDF downloaded successfully.', { id: loadToast });
+      setIsDownloadModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate PDF.', { id: loadToast });
+    }
+  };
 
   const safeFormatDate = (dateStr?: string, formatPattern: string = 'dd/MM/yyyy') => {
     if (!dateStr) return 'N/A';
@@ -194,15 +300,27 @@ const Students: React.FC = () => {
           </div>
         </motion.div>
         
-        <motion.button 
-          initial={{ opacity: 0, scale: 0.9 }} 
-          animate={{ opacity: 1, scale: 1 }}
-          onClick={() => { setEditingStudent(undefined); setIsFormOpen(true); }}
-          className="btn-primary group !rounded-[2rem] h-20 px-12"
-        >
-          <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
-          Add Student
-        </motion.button>
+        <div className="flex flex-wrap items-center gap-4">
+          <motion.button 
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => setIsDownloadModalOpen(true)}
+            className="btn-secondary !rounded-[2rem] h-20 px-10 border-white/5 !bg-white/[0.02]"
+          >
+            <DownloadCloud className="w-6 h-6 text-emerald-500" />
+            Download PDF
+          </motion.button>
+          
+          <motion.button 
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => { setEditingStudent(undefined); setIsFormOpen(true); }}
+            className="btn-primary group !rounded-[2rem] h-20 px-12"
+          >
+            <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
+            Add Student
+          </motion.button>
+        </div>
       </div>
 
       {/* Advanced Control Panel */}
@@ -391,6 +509,72 @@ const Students: React.FC = () => {
         student={promotingStudent}
         onPromoted={fetchStudents}
       />
+
+      {/* Customizable PDF Export Modal */}
+      <AnimatePresence>
+        {isDownloadModalOpen && (
+          <Portal>
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsDownloadModalOpen(false)}
+                className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
+                style={{ position: 'fixed' }}
+              />
+              
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                className="glass-card !rounded-[4rem] w-full max-w-xl relative z-20 border-white/10 !p-12 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto max-h-[90vh] flex flex-col"
+              >
+                <div className="flex items-center justify-between mb-8 shrink-0">
+                  <div>
+                    <h3 className="text-3xl font-black italic uppercase text-white leading-none">Custom <span className="text-emerald-500">Export</span></h3>
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-2">Select columns to include in PDF</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setIsDownloadModalOpen(false)}
+                    className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all border border-white/5"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar space-y-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    {columnOptions.map((col) => (
+                      <label 
+                        key={col.key} 
+                        className="flex items-center gap-3 bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 p-4 rounded-2xl cursor-pointer transition-all select-none"
+                      >
+                        <input 
+                          type="checkbox"
+                          checked={selectedColumns[col.key]}
+                          onChange={(e) => setSelectedColumns(p => ({ ...p, [col.key]: e.target.checked }))}
+                          className="w-5 h-5 rounded border-white/10 bg-black/40 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-0"
+                        />
+                        <span className="text-sm font-bold text-white/80">{col.label}</span>
+                      </label>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full relative group overflow-hidden bg-emerald-500 hover:bg-emerald-400 text-[#05070a] font-black italic uppercase tracking-widest h-16 rounded-2xl transition-all duration-500 shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_50px_rgba(16,185,129,0.5)] active:scale-95 flex items-center justify-center gap-3 cursor-pointer mt-6"
+                  >
+                    <DownloadCloud className="w-5 h-5" />
+                    <span>Generate PDF</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </Portal>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
