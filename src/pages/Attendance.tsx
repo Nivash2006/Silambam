@@ -523,7 +523,7 @@ const Attendance: React.FC = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: idx * 0.03 }}
                       key={student.id}
-                      onClick={() => setAttendance(p => ({ ...p, [student.id]: status === 'present' ? null : 'present' }))}
+                      onClick={() => setAttendance(p => ({ ...p, [student.id]: p[student.id] === 'present' ? null : 'present' }))}
                       className="glass-card group flex items-center justify-between gap-8 py-6 px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2.5rem] cursor-pointer"
                     >
                        <div className="flex items-center gap-6 flex-1 min-w-0">
@@ -557,37 +557,32 @@ const Attendance: React.FC = () => {
 
                        <div className="flex items-center gap-3">
                           <button 
+                            type="button"
                             onClick={(e) => {
                                e.stopPropagation();
-                               setAttendance(p => ({ ...p, [student.id]: status === 'present' ? null : 'present' }));
+                               setAttendance(p => ({ ...p, [student.id]: p[student.id] === 'present' ? null : 'present' }));
                             }}
                             className={cn(
                               "w-12 h-12 rounded-xl transition-all flex items-center justify-center border",
                               status === 'present' ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20" : "bg-white/[0.02] border-white/5 text-white/20 hover:text-emerald-400 hover:border-emerald-500/20"
                             )}
+                            title="Mark Present"
                           >
                              <Check className="w-5 h-5" />
                           </button>
                           <button 
+                            type="button"
                             onClick={(e) => {
                                e.stopPropagation();
-                               setAttendance(p => ({ ...p, [student.id]: status === 'absent' ? null : 'absent' }));
+                               setAttendance(p => ({ ...p, [student.id]: p[student.id] === 'absent' ? null : 'absent' }));
                             }}
                             className={cn(
                               "w-12 h-12 rounded-xl transition-all flex items-center justify-center border",
                               status === 'absent' ? "bg-rose-500 border-transparent text-white shadow-lg shadow-rose-500/20" : "bg-white/[0.02] border-white/5 text-white/20 hover:text-rose-400 hover:border-rose-500/20"
                             )}
+                            title="Mark Absent"
                           >
                              <X className="w-5 h-5" />
-                          </button>
-                          <button 
-                            onClick={(e) => {
-                               e.stopPropagation();
-                               setAttendance(p => ({ ...p, [student.id]: null }));
-                            }}
-                            className="w-12 h-12 rounded-xl bg-white/[0.01] border border-white/5 text-white/10 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center group/reset"
-                          >
-                            <RotateCcw className="w-4 h-4 group-hover/reset:rotate-180 transition-transform duration-700" />
                           </button>
                        </div>
                     </motion.div>
@@ -597,17 +592,18 @@ const Attendance: React.FC = () => {
            </div>
         </div>
       </div>
-      <AnimatePresence>
-        {isDownloadOpen && (
-          <Portal>
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+      <Portal>
+        <AnimatePresence>
+          {isDownloadOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto"
+            >
+              <div 
                 onClick={() => setIsDownloadOpen(false)}
                 className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
-                style={{ position: 'fixed' }}
               />
               
               <motion.div 
@@ -641,7 +637,11 @@ const Attendance: React.FC = () => {
                       ].map(mode => (
                         <button
                           key={mode.id}
-                          onClick={() => setDownloadMode(mode.id as any)}
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDownloadMode(mode.id as any);
+                          }}
                           className={cn(
                             "w-full py-4 px-6 rounded-xl border text-xs font-black uppercase tracking-wider text-left transition-all",
                             downloadMode === mode.id 
@@ -656,6 +656,7 @@ const Attendance: React.FC = () => {
                   </div>
 
                   <button 
+                    type="button"
                     onClick={handleDownloadPDF}
                     className="btn-primary w-full !h-16 text-[10px] font-black uppercase tracking-widest mt-6"
                   >
@@ -664,10 +665,10 @@ const Attendance: React.FC = () => {
                   </button>
                 </div>
               </motion.div>
-            </div>
-          </Portal>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
     </div>
   );
 };

@@ -989,17 +989,18 @@ const Tournaments: React.FC = () => {
       </div>
 
       {/* achievements record creation Modal */}
-      <AnimatePresence>
-        {isFormOpen && (
-          <Portal>
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+      <Portal>
+        <AnimatePresence>
+          {isFormOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto"
+            >
+              <div 
                 onClick={() => setIsFormOpen(false)}
                 className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
-                style={{ position: 'fixed' }}
               />
               
               <motion.div 
@@ -1099,23 +1100,24 @@ const Tournaments: React.FC = () => {
                   </button>
                 </form>
               </motion.div>
-            </div>
-          </Portal>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
 
       {/* upcoming event creation Modal */}
-      <AnimatePresence>
-        {isUpcomingFormOpen && (
-          <Portal>
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+      <Portal>
+        <AnimatePresence>
+          {isUpcomingFormOpen && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto"
+            >
+              <div 
                 onClick={() => setIsUpcomingFormOpen(false)}
                 className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
-                style={{ position: 'fixed' }}
               />
               
               <motion.div 
@@ -1195,23 +1197,24 @@ const Tournaments: React.FC = () => {
                   </button>
                 </form>
               </motion.div>
-            </div>
-          </Portal>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
 
       {/* Student Registration Modal */}
-      <AnimatePresence>
-        {isRegisterOpen && selectedUpcoming && (
-          <Portal>
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+      <Portal>
+        <AnimatePresence>
+          {isRegisterOpen && selectedUpcoming && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto"
+            >
+              <div 
                 onClick={() => setIsRegisterOpen(false)}
                 className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
-                style={{ position: 'fixed' }}
               />
               
               <motion.div 
@@ -1260,10 +1263,10 @@ const Tournaments: React.FC = () => {
                   )}
                 </div>
               </motion.div>
-            </div>
-          </Portal>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
 
       {/* Student Edit Form Modal (from T-shirt management) */}
       {isStudentFormOpen && (
@@ -1279,17 +1282,18 @@ const Tournaments: React.FC = () => {
       )}
 
       {/* Student Details Modal */}
-      <AnimatePresence>
-        {isDetailModalOpen && selectedStudentForDetail && (
-          <Portal>
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+      <Portal>
+        <AnimatePresence>
+          {isDetailModalOpen && selectedStudentForDetail && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto"
+            >
+              <div 
                 onClick={() => { setIsDetailModalOpen(false); setSelectedStudentForDetail(null); }}
                 className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
-                style={{ position: 'fixed' }}
               />
               
               <motion.div 
@@ -1360,10 +1364,10 @@ const Tournaments: React.FC = () => {
                   </div>
                 </div>
               </motion.div>
-            </div>
-          </Portal>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
 
     </div>
   );

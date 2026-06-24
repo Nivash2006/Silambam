@@ -466,17 +466,18 @@ const Fees: React.FC = () => {
       </div>
 
       {/* Edit Payment Modal */}
-      <AnimatePresence>
-        {isEditModalOpen && editingPayment && (
-          <Portal>
-            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+      <Portal>
+        <AnimatePresence>
+          {isEditModalOpen && editingPayment && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto"
+            >
+              <div 
                 onClick={() => { setIsEditModalOpen(false); setEditingPayment(null); }}
                 className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
-                style={{ position: 'fixed' }}
               />
               
               <motion.div 
@@ -559,10 +560,10 @@ const Fees: React.FC = () => {
                   </div>
                 </form>
               </motion.div>
-            </div>
-          </Portal>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Portal>
     </div>
   );
 };

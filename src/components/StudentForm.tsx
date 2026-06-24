@@ -150,14 +150,16 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <Portal>
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-10">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+    <Portal>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-10"
+          >
+            <div 
               className="absolute inset-0 bg-[#05070a]/90 backdrop-blur-xl"
               onClick={onClose}
             />
@@ -388,10 +390,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                 </form>
               </div>
             </motion.div>
-          </div>
-        </Portal>
-      )}
-    </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Portal>
   );
 };
 

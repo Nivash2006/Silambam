@@ -66,14 +66,16 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && student && (
-        <Portal>
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+    <Portal>
+      <AnimatePresence>
+        {isOpen && student && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center p-4"
+          >
+            <div 
               className="absolute inset-0 bg-[#05070a]/90 backdrop-blur-xl" 
               onClick={onClose} 
             />
@@ -114,38 +116,32 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1 block">Select New Rank</label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {belts.map(belt => (
-                        <button
-                          key={belt}
-                          type="button"
-                          onClick={() => setNewLevel(belt)}
-                          className={`py-3.5 px-4 rounded-xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border ${
-                            newLevel === belt 
-                              ? 'bg-emerald-500 text-[#05070a] border-transparent shadow-[0_0_20px_rgba(16,185,129,0.3)]' 
-                              : 'bg-white/[0.02] border-white/5 text-white/20 hover:border-white/10 hover:text-white'
-                          }`}
-                        >
-                          {belt}
-                        </button>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">New Belt Rank</label>
+                  <div className="relative group/select">
+                    <Award className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50" />
+                    <select 
+                      className="bg-black/40 border border-white/5 w-full h-18 pl-16 pr-8 rounded-2xl text-white font-black text-sm focus:outline-none focus:ring-2 ring-emerald-500/20 appearance-none cursor-pointer"
+                      value={newLevel} 
+                      onChange={e => setNewLevel(e.target.value as BeltLevel)}
+                    >
+                      {belts.map(b => (
+                        <option key={b} value={b} className="bg-[#0B0F0C]">{b} Belt</option>
                       ))}
-                    </div>
+                    </select>
                   </div>
+                </div>
 
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1 block">Upgrade Date</label>
-                    <div className="relative group/input">
-                      <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within/input:text-emerald-500 transition-colors" />
-                      <input
-                        type="date"
-                        className="w-full pl-14 h-16 bg-white/[0.03] border border-white/10 rounded-2xl text-white font-bold italic tracking-tight focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all font-mono"
-                        value={date}
-                        onChange={e => setDate(e.target.value)}
-                      />
-                    </div>
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Promotion Date</label>
+                  <div className="relative group/date">
+                    <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50" />
+                    <input 
+                      type="date" 
+                      className="bg-black/40 border border-white/5 w-full h-18 pl-16 pr-8 rounded-2xl text-white font-black text-sm focus:outline-none focus:ring-2 ring-emerald-500/20 font-mono" 
+                      value={date} 
+                      onChange={e => setDate(e.target.value)} 
+                    />
                   </div>
                 </div>
 
@@ -161,10 +157,10 @@ const PromoteModal: React.FC<PromoteModalProps> = ({ isOpen, onClose, student, o
                 </button>
               </div>
             </motion.div>
-          </div>
-        </Portal>
-      )}
-    </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </Portal>
   );
 };
 
