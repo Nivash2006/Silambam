@@ -193,7 +193,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       )}>
         {/* Top Header Bar */}
         <header className={cn(
-          "h-20 lg:h-24 px-8 lg:px-16 flex items-center justify-between shrink-0 fixed top-0 right-0 z-40 transition-all duration-500",
+          "h-20 lg:h-24 px-6 lg:px-16 flex items-center justify-between shrink-0 fixed top-0 left-0 right-0 z-40 transition-all duration-500",
           isSidebarOpen ? "lg:left-80" : "lg:left-28",
           scrolled ? "bg-black/40 backdrop-blur-2xl border-b border-white/5" : "bg-transparent"
         )}>
@@ -254,8 +254,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                       className="absolute inset-x-2 inset-y-1.5 bg-emerald-500/10 rounded-2xl border border-emerald-500/20"
                     />
                   )}
-                  <Icon className={cn("w-6 h-6 relative z-10 transition-all duration-500", isActive && "scale-110 -translate-y-1 text-emerald-500")} />
-                  <span className="text-[8px] font-black uppercase tracking-widest relative z-10">{item.name === 'Dashboard' ? 'Home' : item.name.split(' ')[0]}</span>
+                  <Icon className={cn("w-5 h-5 relative z-10 transition-all duration-500", isActive && "scale-110 -translate-y-0.5 text-emerald-500")} />
+                  <span className="text-[7.5px] font-black uppercase tracking-wide relative z-10">
+                    {item.name === 'Dashboard' ? 'Home' : item.name === 'Attendance' ? 'Attend' : item.name === 'Tournaments' ? 'Tourney' : item.name.split(' ')[0]}
+                  </span>
                 </Link>
               );
             })}

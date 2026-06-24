@@ -377,11 +377,11 @@ const Fees: React.FC = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: idx * 0.03 }}
                       key={student.id}
-                      className="glass-card group flex flex-col md:flex-row md:items-center gap-8 py-6 px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2.5rem]"
+                      className="glass-card group flex flex-col md:flex-row md:items-center gap-4 sm:gap-8 py-4 sm:py-6 px-5 sm:px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-[2.5rem]"
                     >
-                       <div className="flex items-center gap-6 flex-1 min-w-0">
+                       <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
                           <div className="relative shrink-0">
-                             <div className="w-16 h-16 rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
+                             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1rem] sm:rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
                                 {student.photo_url ? (
                                   <img src={student.photo_url} className="w-full h-full object-cover" alt="" />
                                 ) : (
@@ -389,17 +389,17 @@ const Fees: React.FC = () => {
                                 )}
                              </div>
                              <div className={cn(
-                               "absolute -top-2 -right-2 w-6 h-6 rounded-full border-2 border-[#0B0F0C] z-10 flex items-center justify-center",
+                               "absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-[#0B0F0C] z-10 flex items-center justify-center",
                                status === 'paid' ? "bg-emerald-500" : "bg-rose-500"
                              )}>
-                                {status === 'paid' ? <CheckCircle2 className="w-3.5 h-3.5 text-white" /> : <AlertCircle className="w-3.5 h-3.5 text-white" />}
+                                {status === 'paid' ? <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" /> : <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />}
                              </div>
                           </div>
 
                           <div className="flex-1 min-w-0">
-                             <div className="flex items-center gap-4 mb-2">
-                                <h4 className="text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
-                                <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">{student.belt_level}</span>
+                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mb-1.5 sm:mb-2">
+                                <h4 className="text-lg sm:text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
+                                <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] self-start sm:self-auto">{student.belt_level}</span>
                              </div>
                              <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2">
@@ -410,7 +410,7 @@ const Fees: React.FC = () => {
                           </div>
                        </div>
 
-                       <div className="flex items-center gap-6 justify-between md:justify-end">
+                       <div className="flex items-center gap-3 sm:gap-6 justify-between md:justify-end w-full md:w-auto">
                           <AnimatePresence mode="wait">
                              {status === 'paid' ? (
                                <motion.div 

@@ -259,13 +259,13 @@ const Dashboard: React.FC = () => {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8 }}
-          className="flex flex-wrap gap-4"
+          className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto"
         >
-          <Link to="/attendance" className="btn-secondary group !rounded-[2rem]">
+          <Link to="/attendance" className="btn-secondary group !rounded-[2rem] text-center justify-center w-full sm:w-auto">
             <CheckCircle2 className="w-5 h-5 group-hover:text-emerald-400 transition-colors" />
             Record Session
           </Link>
-          <Link to="/students" className="btn-primary !rounded-[2rem]">
+          <Link to="/students" className="btn-primary !rounded-[2rem] text-center justify-center w-full sm:w-auto">
             <Plus className="w-5 h-5" />
             Add Student
           </Link>
@@ -402,23 +402,23 @@ const Dashboard: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: idx * 0.1 }}
                 key={t.id} 
-                className="glass-card flex items-center gap-10 py-8 group hover:bg-white/[0.03] !rounded-[2.5rem] border-white/5 hover:border-white/10"
+                className="glass-card flex flex-col sm:flex-row items-center gap-6 sm:gap-10 py-6 sm:py-8 px-6 sm:px-8 group hover:bg-white/[0.03] !rounded-[2.5rem] border-white/5 hover:border-white/10 text-center sm:text-left"
               >
-                <div className="w-20 h-20 bg-emerald-500/5 rounded-[2rem] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-700 border border-emerald-500/10 relative overflow-hidden">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-emerald-500/5 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-700 border border-emerald-500/10 relative overflow-hidden">
                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent" />
-                   <Target className="w-8 h-8 text-emerald-500 relative z-10" />
+                   <Target className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500 relative z-10" />
                 </div>
                 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 w-full">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em]">{t.date}</p>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-wide sm:tracking-[0.3em]">{t.date}</p>
                     <div className="flex items-center gap-2">
                        <Trophy className="w-3 h-3 text-amber-500" />
                        <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{t.position}</span>
                     </div>
                   </div>
-                  <h4 className="font-black text-2xl text-white group-hover:text-emerald-400 transition-colors uppercase italic mb-2 tracking-tight truncate">{t.name}</h4>
-                  <div className="flex items-center gap-4">
+                  <h4 className="font-black text-xl sm:text-2xl text-white group-hover:text-emerald-400 transition-colors uppercase italic mb-2 tracking-tight truncate">{t.name}</h4>
+                  <div className="flex items-center justify-center sm:justify-start gap-4">
                     <div className="px-3 py-1 bg-white/5 rounded-full border border-white/10">
                        <p className="text-[9px] font-black text-white/60 uppercase tracking-widest leading-none">{t.student?.name}</p>
                     </div>
@@ -439,41 +439,41 @@ const Dashboard: React.FC = () => {
             
             {/* Quick Utility Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
-               <Link to="/reports" className="glass-card !p-8 flex items-center gap-8 group hover:bg-sky-500/[0.03] border-white/5 !rounded-[3rem] transition-all">
-                  <div className="w-16 h-16 bg-sky-500/10 rounded-2xl flex items-center justify-center border border-sky-500/10 group-hover:scale-110 transition-transform">
-                     <FileText className="w-7 h-7 text-sky-400" />
+               <Link to="/reports" className="glass-card !p-5 sm:!p-8 flex items-center gap-4 sm:gap-8 group hover:bg-sky-500/[0.03] border-white/5 !rounded-[2rem] sm:!rounded-[3rem] transition-all">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-sky-500/10 rounded-[1.25rem] sm:rounded-2xl flex items-center justify-center border border-sky-500/10 group-hover:scale-110 transition-transform shrink-0">
+                     <FileText className="w-6 h-6 sm:w-7 sm:h-7 text-sky-400" />
                   </div>
                   <div>
-                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-sky-400 transition-colors">Reports Hub</p>
+                    <p className="font-black text-white uppercase italic text-base sm:text-lg tracking-tight group-hover:text-sky-400 transition-colors">Reports Hub</p>
                     <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Export & Generate Reports</p>
                   </div>
                </Link>
-               <Link to="/fees" className="glass-card !p-8 flex items-center gap-8 group hover:bg-emerald-400/[0.03] border-white/5 !rounded-[3rem] transition-all">
-                  <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center border border-emerald-500/10 group-hover:scale-110 transition-transform">
-                     <CreditCard className="w-7 h-7 text-emerald-400" />
+               <Link to="/fees" className="glass-card !p-5 sm:!p-8 flex items-center gap-4 sm:gap-8 group hover:bg-emerald-400/[0.03] border-white/5 !rounded-[2rem] sm:!rounded-[3rem] transition-all">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/10 rounded-[1.25rem] sm:rounded-2xl flex items-center justify-center border border-emerald-500/10 group-hover:scale-110 transition-transform shrink-0">
+                     <CreditCard className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" />
                   </div>
                   <div>
-                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-emerald-400 transition-colors">Fees Hub</p>
+                    <p className="font-black text-white uppercase italic text-base sm:text-lg tracking-tight group-hover:text-emerald-400 transition-colors">Fees Hub</p>
                     <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Manage Fee Payments</p>
                   </div>
                </Link>
-               <Link to="/tournaments" className="glass-card !p-8 flex items-center gap-8 group hover:bg-amber-400/[0.03] border-white/5 !rounded-[3rem] transition-all">
-                  <div className="w-16 h-16 bg-amber-400/10 rounded-2xl flex items-center justify-center border border-amber-400/10 group-hover:scale-110 transition-transform">
-                     <Calendar className="w-7 h-7 text-amber-400" />
+               <Link to="/tournaments" className="glass-card !p-5 sm:!p-8 flex items-center gap-4 sm:gap-8 group hover:bg-amber-400/[0.03] border-white/5 !rounded-[2rem] sm:!rounded-[3rem] transition-all">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-amber-400/10 rounded-[1.25rem] sm:rounded-2xl flex items-center justify-center border border-amber-400/10 group-hover:scale-110 transition-transform shrink-0">
+                     <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-amber-400" />
                   </div>
                   <div>
-                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-amber-400 transition-colors">Next Tournament</p>
-                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">
+                    <p className="font-black text-white uppercase italic text-base sm:text-lg tracking-tight group-hover:text-amber-400 transition-colors">Next Tournament</p>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1 truncate max-w-[150px] sm:max-w-none font-sans">
                       {nextTournamentData ? `${nextTournamentData.name} (${nextTournamentData.registrations_count} Reg)` : 'No upcoming events'}
                     </p>
                   </div>
                </Link>
-               <Link to="/tournaments" className="glass-card !p-8 flex items-center gap-8 group hover:bg-purple-500/[0.03] border-white/5 !rounded-[3rem] transition-all">
-                  <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/10 group-hover:scale-110 transition-transform">
-                     <Tag className="w-7 h-7 text-purple-400" />
+               <Link to="/tournaments" className="glass-card !p-5 sm:!p-8 flex items-center gap-4 sm:gap-8 group hover:bg-purple-500/[0.03] border-white/5 !rounded-[2rem] sm:!rounded-[3rem] transition-all">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-500/10 rounded-[1.25rem] sm:rounded-2xl flex items-center justify-center border border-purple-500/10 group-hover:scale-110 transition-transform shrink-0">
+                     <Tag className="w-6 h-6 sm:w-7 sm:h-7 text-purple-400" />
                   </div>
                   <div>
-                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-purple-400 transition-colors">T-Shirt Orders</p>
+                    <p className="font-black text-white uppercase italic text-base sm:text-lg tracking-tight group-hover:text-purple-400 transition-colors">T-Shirt Orders</p>
                     <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">
                       {tshirtCount} Orders Pending Delivery
                     </p>

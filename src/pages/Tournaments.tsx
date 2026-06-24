@@ -474,7 +474,7 @@ const Tournaments: React.FC = () => {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex border-b border-white/5 pb-1 gap-2">
+      <div className="flex border-b border-white/5 pb-1 gap-2 overflow-x-auto scrollbar-none whitespace-nowrap -mx-4 px-4 sm:mx-0 sm:px-0">
         {[
           { id: 'achievements', label: 'Achievements', icon: Trophy },
           { id: 'upcoming', label: 'Upcoming Tournaments', icon: Calendar },
@@ -486,7 +486,7 @@ const Tournaments: React.FC = () => {
               key={tab.id}
               onClick={() => { setActiveTab(tab.id as any); setSelectedUpcoming(null); }}
               className={cn(
-                "flex items-center gap-3 px-6 py-4.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-t-2xl border-b-2 border-transparent",
+                "flex items-center gap-3 px-6 py-4.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-t-2xl border-b-2 border-transparent shrink-0",
                 activeTab === tab.id 
                   ? "border-emerald-500 text-emerald-400 bg-white/[0.02]" 
                   : "text-white/40 hover:text-white"
@@ -536,7 +536,7 @@ const Tournaments: React.FC = () => {
                             setIsDetailModalOpen(true);
                           }
                         }}
-                        className="glass-card group hover:scale-[1.02] transition-all duration-700 border-white/5 !rounded-[3rem] !p-10 relative overflow-hidden cursor-pointer"
+                        className="glass-card group hover:scale-[1.02] transition-all duration-700 border-white/5 !rounded-[2rem] sm:!rounded-[3rem] !p-5 sm:!p-10 relative overflow-hidden cursor-pointer"
                       >
                         <div className={cn(
                           "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none",
@@ -546,47 +546,51 @@ const Tournaments: React.FC = () => {
                           "bg-gradient-to-r from-emerald-500/[0.02] to-transparent"
                         )} />
                         
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-10 relative z-10">
-                          <div className="flex items-center gap-10 w-full">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 relative z-10">
+                          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 w-full text-center sm:text-left flex-1 min-w-0">
                             <div className={cn(
-                              "w-28 h-28 rounded-[2rem] flex items-center justify-center border transition-all duration-1000 group-hover:rotate-[8deg] group-hover:scale-110 shadow-2xl shrink-0",
+                              "w-16 h-16 sm:w-28 sm:h-28 rounded-[1.2rem] sm:rounded-[2rem] flex items-center justify-center border transition-all duration-1000 group-hover:rotate-[8deg] group-hover:scale-110 shadow-2xl shrink-0",
                               isGold ? 'bg-yellow-400/10 text-yellow-500 border-yellow-400/20 shadow-[0_0_40px_rgba(234,179,8,0.1)]' :
                               isSilver ? 'bg-slate-300/10 text-slate-300 border-slate-300/20 shadow-[0_0_40px_rgba(203,213,225,0.1)]' :
                               isBronze ? 'bg-orange-400/10 text-orange-500 border-orange-400/20 shadow-[0_0_40px_rgba(251,146,60,0.1)]' :
                               'bg-white/5 text-white/10 border-white/5'
                             )}>
-                              {isGold ? <Crown className="w-14 h-14" /> : <Medal className="w-14 h-14" />}
+                              {isGold ? <Crown className="w-8 h-8 sm:w-14 sm:h-14" /> : <Medal className="w-8 h-8 sm:w-14 sm:h-14" />}
                             </div>
-                            <div className="space-y-4 flex-1">
-                              <h3 className="font-black text-3xl text-white italic uppercase tracking-tighter group-hover:text-emerald-400 transition-colors leading-none">{t.name}</h3>
-                              <div className="flex flex-wrap items-center gap-6 mt-3">
+                            <div className="space-y-3 sm:space-y-4 flex-1 w-full min-w-0">
+                              <h3 className="font-black text-xl sm:text-3xl text-white italic uppercase tracking-tighter group-hover:text-emerald-400 transition-colors leading-none truncate sm:whitespace-normal">{t.name}</h3>
+                              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-6 mt-3">
                                 <span className="flex items-center gap-2.5 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] font-mono">
                                   <Calendar className="w-4 h-4 text-emerald-500/50" /> {t.date}
                                 </span>
-                                <div className="w-1.5 h-1.5 rounded-full bg-white/[0.05]" />
-                                <span className="flex items-center gap-2.5 text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em] cursor-pointer hover:text-emerald-400 transition-colors">
+                                <div className="hidden sm:block w-1.5 h-1.5 rounded-full bg-white/[0.05]" />
+                                <span className="flex items-center gap-2.5 text-[10px] font-black text-emerald-500 uppercase tracking-wider sm:tracking-[0.3em] cursor-pointer hover:text-emerald-400 transition-colors max-w-full min-w-0">
                                   {student?.photo_url ? (
-                                    <img src={student.photo_url} className="w-6 h-6 rounded-full object-cover border border-emerald-500/20" alt="" />
+                                    <img src={student.photo_url} className="w-6 h-6 rounded-full object-cover border border-emerald-500/20 shrink-0" alt="" />
                                   ) : (
-                                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[8px] font-black text-emerald-400">
+                                    <div className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[8px] font-black text-emerald-400 shrink-0">
                                       {student?.name?.charAt(0) || 'G'}
                                     </div>
                                   )}
-                                  {student?.name || 'Grandmaster'} 
-                                  {student?.class_std && <span className="text-white/30 font-normal">({student.class_std})</span>}
+                                  <span className="truncate max-w-[100px] sm:max-w-none">{student?.name || 'Grandmaster'}</span>
+                                  {student?.class_std && (
+                                    <span className="text-white/30 font-normal tracking-normal shrink-0 whitespace-nowrap">
+                                      ({student.class_std})
+                                    </span>
+                                  )}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-right shrink-0 w-full md:w-auto flex items-center justify-end gap-4 z-20">
+                          <div className="shrink-0 w-full md:w-auto flex items-center justify-between md:justify-end gap-3 sm:gap-4 z-20">
                             <span className={cn(
-                              "inline-flex items-center gap-4 text-[11px] font-black px-10 py-5 rounded-[1.5rem] uppercase tracking-[0.3em] border transition-all duration-500 w-full md:w-auto justify-center",
+                              "inline-flex items-center gap-3 sm:gap-4 text-[9px] sm:text-[11px] font-black px-4 sm:px-10 py-3.5 sm:py-5 rounded-[1.2rem] sm:rounded-[1.5rem] uppercase tracking-wider sm:tracking-[0.3em] border transition-all duration-500 flex-1 md:flex-none justify-center",
                               isGold ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 shadow-xl' :
                               isSilver ? 'bg-slate-300/10 text-slate-300 border-slate-300/20' :
                               isBronze ? 'bg-orange-400/10 text-orange-500 border-orange-400/20' :
                               'bg-white/5 text-white/40 border-white/5'
                             )}>
-                              {isGold && <Star className="w-5 h-5 animate-pulse" />}
+                              {isGold && <Star className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />}
                               {t.position === 'Participation' ? 'Participation' : `${t.position} Place`}
                             </span>
                             <button
@@ -594,7 +598,7 @@ const Tournaments: React.FC = () => {
                                 e.stopPropagation();
                                 handleDeleteAchievement(t.id);
                               }}
-                              className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center"
+                              className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center shrink-0"
                               title="Delete Achievement"
                             >
                               <Trash2 className="w-5 h-5" />
@@ -741,7 +745,7 @@ const Tournaments: React.FC = () => {
                   ← Back to List
                 </button>
 
-                <div className="glass-card !p-10 !rounded-[3rem] border-white/5 bg-white/[0.01] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                 <div className="glass-card !p-5 sm:!p-10 !rounded-[2rem] sm:!rounded-[3rem] border-white/5 bg-white/[0.01] flex flex-col lg:flex-row lg:items-center justify-between gap-6 sm:gap-8 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.02] rounded-full blur-3xl" />
                   
                   <div>
@@ -795,7 +799,7 @@ const Tournaments: React.FC = () => {
                   
                   <div className="divide-y divide-white/[0.03]">
                     {selectedRegs.map((reg) => (
-                      <div key={reg.id} className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white/[0.01] transition-colors">
+                      <div key={reg.id} className="p-5 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 group hover:bg-white/[0.01] transition-colors">
                         <div className="flex-1 min-w-0">
                           <h4 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors uppercase italic tracking-tight truncate leading-none mb-3">
                             {reg.student?.name}
@@ -812,7 +816,7 @@ const Tournaments: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-6 justify-between md:justify-end">
+                        <div className="flex items-center gap-4 sm:gap-6 justify-between md:justify-end w-full md:w-auto">
                           <button
                             onClick={() => handleToggleFeeStatus(reg.id, reg.fee_status)}
                             className={cn(
@@ -906,7 +910,7 @@ const Tournaments: React.FC = () => {
               {filteredTshirts.map(student => (
                 <div 
                   key={student.id} 
-                  className="glass-card flex flex-col md:flex-row md:items-center justify-between gap-6 !p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-3xl"
+                  className="glass-card flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 !p-5 sm:!p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-3xl"
                 >
                   <div className="flex-1 min-w-0">
                     <h4 className="text-xl font-black text-white italic uppercase tracking-tight">{student.name}</h4>
@@ -919,9 +923,9 @@ const Tournaments: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-6">
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 w-full md:w-auto">
                     {/* Size Select Dropdown */}
-                    <div className="space-y-1 shrink-0 w-36">
+                    <div className="space-y-1 w-full sm:w-36 shrink-0">
                       <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Size</label>
                       <div className="relative">
                         <select
@@ -938,7 +942,7 @@ const Tournaments: React.FC = () => {
                     </div>
 
                     {/* Status Select Dropdown */}
-                    <div className="space-y-1 shrink-0 w-44">
+                    <div className="space-y-1 w-full sm:w-44 shrink-0">
                       <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Status</label>
                       <div className="relative">
                         <select
@@ -956,20 +960,20 @@ const Tournaments: React.FC = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-2 self-end mt-4 md:mt-0">
+                    <div className="flex items-center gap-2 justify-end w-full sm:w-auto mt-2 sm:mt-0">
                       <button
                         onClick={() => {
                           setEditingStudent(student);
                           setIsStudentFormOpen(true);
                         }}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0"
                         title="Edit Student"
                       >
                         <Edit2 className="w-4.5 h-4.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteStudent(student.id)}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center"
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0"
                         title="Delete Student"
                       >
                         <Trash2 className="w-4.5 h-4.5" />

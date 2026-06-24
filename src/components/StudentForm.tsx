@@ -172,7 +172,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
               className="glass-card w-full max-w-4xl !p-0 shadow-[0_50px_100px_rgba(0,0,0,0.5)] border-white/5 relative z-20 overflow-hidden flex flex-col md:flex-row max-h-[95vh]"
             >
               {/* Form Left Side - Preview & Image */}
-              <div className="md:w-72 bg-gradient-to-br from-emerald-500/10 to-transparent border-r border-white/5 p-10 flex flex-col items-center">
+              <div className="w-full md:w-72 bg-gradient-to-br from-emerald-500/10 to-transparent border-b md:border-b-0 md:border-r border-white/5 p-5 md:p-10 flex flex-col items-center shrink-0">
                 <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                   <div className="absolute inset-0 bg-emerald-500 blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
                   <div className="relative w-40 h-40 rounded-[2.5rem] bg-white/[0.03] border-2 border-dashed border-white/10 flex items-center justify-center overflow-hidden transition-all duration-500 group-hover:border-emerald-500/50">
@@ -203,12 +203,12 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                   <input type="file" ref={fileInputRef} onChange={handlePhotoUpload} accept="image/*" className="hidden" />
                 </div>
 
-                <div className="mt-8 text-center">
+                <div className="mt-6 md:mt-8 text-center">
                   <h4 className="text-xl font-black italic uppercase tracking-tighter text-white truncate w-full">{form.name || 'Unrecorded'}</h4>
                   <p className="text-[10px] text-emerald-500/50 font-black uppercase tracking-[0.3em] mt-2">{form.belt_level} Belt</p>
                 </div>
 
-                <div className="mt-auto space-y-4 w-full">
+                <div className="mt-6 md:mt-auto space-y-4 w-full">
                   <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5 relative overflow-hidden group/id">
                     <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover/id:opacity-100 transition-opacity" />
                     <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.4em] mb-1.5 relative z-10">Academy ID</p>
@@ -219,7 +219,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
 
               {/* Form Right Side - Data Entry */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="p-8 border-b border-white/5 flex items-center justify-between relative z-20">
+                <div className="p-5 sm:p-8 border-b border-white/5 flex items-center justify-between relative z-20">
                   <div>
                     <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white leading-none">Student <span className="text-emerald-500">Enrollment</span></h3>
                     <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.4em] mt-2">Academy Registration Form</p>
@@ -233,8 +233,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                   </button>
                 </div>
 
-                <form className="p-10 overflow-y-auto custom-scrollbar space-y-12" onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <form className="p-5 sm:p-10 overflow-y-auto custom-scrollbar space-y-6 sm:space-y-12" onSubmit={handleSubmit}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-10">
                     {/* Row 1: Name & DOB */}
                     <div className="space-y-4">
                       <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Student Name</label>
