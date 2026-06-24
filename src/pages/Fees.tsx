@@ -205,6 +205,25 @@ const Fees: React.FC = () => {
     }
   };
 
+  const deletePaymentDirect = async (studentName: string, payment: FeePayment) => {
+    if (!window.confirm(`Are you sure you want to delete the payment for ${studentName}? This will set their status back to Pending.`)) return;
+    const loadToast = toast.loading('Reverting payment...');
+    try {
+      console.log('Deleting payment ID:', payment.id);
+      const { error } = await supabase
+        .from('fees')
+        .delete()
+        .eq('id', payment.id);
+      
+      if (error) throw error;
+      toast.success('Payment reverted successfully.', { id: loadToast });
+      fetchData();
+    } catch (err) {
+      console.error('Error deleting payment:', err);
+      toast.error('Failed to revert payment.', { id: loadToast });
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-12 animate-in fade-in duration-700">
@@ -454,17 +473,30 @@ const Fees: React.FC = () => {
                                   Pay
                                </button>
                              ) : (
-                               <button 
-                                 onClick={() => {
-                                   if (payment) {
-                                     openEditModal(student.name, payment);
-                                   }
-                                 }}
-                                 className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center"
-                                 title="Edit Payment"
-                               >
-                                  <Edit2 className="w-5 h-5" />
-                               </button>
+                                <div className="flex items-center gap-2">
+                                  <button 
+                                    onClick={() => {
+                                      if (payment) {
+                                        openEditModal(student.name, payment);
+                                      }
+                                    }}
+                                    className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center"
+                                    title="Edit Payment"
+                                  >
+                                    <Edit2 className="w-5 h-5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      if (payment) {
+                                        deletePaymentDirect(student.name, payment);
+                                      }
+                                    }}
+                                    className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center"
+                                    title="Delete Payment"
+                                  >
+                                    <Trash2 className="w-5 h-5" />
+                                  </button>
+                                </div>
                              )}
                           </div>
                        </div>

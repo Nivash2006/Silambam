@@ -41,6 +41,7 @@ const Attendance: React.FC = () => {
   const [search, setSearch] = useState('');
   const [weeklyTrends, setWeeklyTrends] = useState<any[]>([]);
   const [personalStats, setPersonalStats] = useState<Record<string, number>>({});
+  const [savedDates, setSavedDates] = useState<{ date: string; rate: number }[]>([]);
 
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
   const [downloadMode, setDownloadMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
@@ -105,7 +106,7 @@ const Attendance: React.FC = () => {
       const currentMonth = format(new Date(selectedDate), 'MMMM yyyy');
       const { data: studentStats } = await supabase
         .from('attendance')
-        .select('student_id, status');
+        .select('student_id, status, date');
       
       const pStats: Record<string, number> = {};
       const totals: Record<string, number> = {};
@@ -122,6 +123,27 @@ const Attendance: React.FC = () => {
         finalPStats[s.id] = Math.round((count / total) * 100);
       });
       setPersonalStats(finalPStats);
+
+      // 5. Fetch unique saved dates with their rate
+      const dateStats: Record<string, { present: number; total: number }> = {};
+      studentStats?.forEach(r => {
+        if (!dateStats[r.date]) {
+          dateStats[r.date] = { present: 0, total: 0 };
+        }
+        dateStats[r.date].total++;
+        if (r.status === 'present') {
+          dateStats[r.date].present++;
+        }
+      });
+
+      const historyList = Object.entries(dateStats)
+        .map(([date, stats]) => ({
+          date,
+          rate: Math.round((stats.present / stats.total) * 100)
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setSavedDates(historyList);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -143,26 +165,47 @@ const Attendance: React.FC = () => {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const records = Object.entries(attendance)
-        .filter(([_, status]) => status !== null)
-        .map(([studentId, status]) => ({
-          student_id: studentId,
-          date: selectedDate,
-          status: status,
-        }));
+      
+      const toUpsert: { student_id: string; date: string; status: string }[] = [];
+      const toDelete: string[] = [];
 
-      if (records.length === 0) {
+      Object.entries(attendance).forEach(([studentId, status]) => {
+        if (status === 'present' || status === 'absent') {
+          toUpsert.push({
+            student_id: studentId,
+            date: selectedDate,
+            status: status
+          });
+        } else if (status === null) {
+          toDelete.push(studentId);
+        }
+      });
+
+      if (toUpsert.length === 0 && toDelete.length === 0) {
          toast.error('No attendance changes to save');
          return;
       }
 
-      const { error } = await supabase
-        .from('attendance')
-        .upsert(records, { onConflict: 'student_id, date' });
-      
-      if (error) throw error;
+      if (toUpsert.length > 0) {
+        const { error: upsertError } = await supabase
+          .from('attendance')
+          .upsert(toUpsert, { onConflict: 'student_id, date' });
+        if (upsertError) throw upsertError;
+      }
+
+      if (toDelete.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('attendance')
+          .delete()
+          .eq('date', selectedDate)
+          .in('student_id', toDelete);
+        if (deleteError) throw deleteError;
+      }
+
       toast.success('Attendance saved successfully');
+      fetchData();
     } catch (error) {
+      console.error('Error saving attendance:', error);
       toast.error('Failed to save attendance');
     } finally {
       setSaving(false);
@@ -415,6 +458,10 @@ const Attendance: React.FC = () => {
             <DownloadCloud className="w-5 h-5 text-emerald-500" />
             Download PDF
           </button>
+          <button onClick={fetchData} className="btn-secondary !h-16 !px-8 backdrop-blur-xl border-white/5 !bg-white/[0.02]" title="Reload saved data">
+            <RotateCcw className="w-5 h-5 text-emerald-500" />
+            Reset
+          </button>
           <button onClick={() => handleMarkAll('present')} className="btn-secondary !h-16 !px-8 backdrop-blur-xl border-white/5 !bg-white/[0.02]">
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             Bulk Present
@@ -472,6 +519,40 @@ const Attendance: React.FC = () => {
                  </div>
                ))}
             </div>
+          </div>
+
+          <div className="glass-card !p-8 !rounded-[2.5rem] border-white/5 space-y-6">
+             <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                   <RotateCcw className="w-4 h-4 text-emerald-400" />
+                   <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Saved History</h4>
+                </div>
+                <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider">{savedDates.length} Saved</span>
+             </div>
+             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                {savedDates.length === 0 ? (
+                  <p className="text-xs text-white/20 italic text-center py-4">No saved attendance sessions</p>
+                ) : (
+                  savedDates.map((item) => (
+                    <button
+                      key={item.date}
+                      onClick={() => setSelectedDate(item.date)}
+                      className={cn(
+                        "w-full h-12 rounded-xl flex items-center justify-between px-6 text-[10px] font-black uppercase tracking-[0.2em] transition-all border",
+                        selectedDate === item.date 
+                          ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20" 
+                          : "bg-white/[0.02] border-white/5 text-white/40 hover:text-white hover:bg-white/5"
+                      )}
+                    >
+                      <span>{format(new Date(item.date), 'dd MMM yyyy')}</span>
+                      <span className={cn(
+                        "text-[8px] px-2 py-0.5 rounded-md font-bold",
+                        selectedDate === item.date ? "bg-white/20 text-white" : "bg-emerald-500/10 text-emerald-400"
+                      )}>{item.rate}% Present</span>
+                    </button>
+                  ))
+                )}
+             </div>
           </div>
 
           <div className="glass-card !p-10 !rounded-[3rem] space-y-10 bg-gradient-to-br from-white/[0.01] to-transparent">
@@ -568,7 +649,7 @@ const Attendance: React.FC = () => {
                             )}
                             title="Mark Present"
                           >
-                             <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                             <Check className="w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
                           </button>
                           <button 
                             type="button"
@@ -582,7 +663,7 @@ const Attendance: React.FC = () => {
                             )}
                             title="Mark Absent"
                           >
-                             <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                             <X className="w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
                           </button>
                        </div>
                     </motion.div>
