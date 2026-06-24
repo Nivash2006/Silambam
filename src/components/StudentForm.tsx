@@ -32,6 +32,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
     belt_level: initialData?.belt_level || 'White' as BeltLevel,
     fee_amount: initialData?.fee_amount?.toString() || '500',
     photo_url: initialData?.photo_url || '',
+    tshirt_status: initialData?.tshirt_status || 'None',
+    tshirt_size: initialData?.tshirt_size || 'None',
   });
 
   React.useEffect(() => {
@@ -50,6 +52,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
         belt_level: initialData?.belt_level || 'White' as BeltLevel,
         fee_amount: initialData?.fee_amount?.toString() || '500',
         photo_url: initialData?.photo_url || '',
+        tshirt_status: initialData?.tshirt_status || 'None',
+        tshirt_size: initialData?.tshirt_size || 'None',
       });
     }
   }, [isOpen, initialData]);
@@ -139,6 +143,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
       belt_level: form.belt_level as BeltLevel,
       fee_amount: parseInt(form.fee_amount) || 0,
       photo_url: form.photo_url,
+      tshirt_status: form.tshirt_status as any,
+      tshirt_size: form.tshirt_size,
     });
     onClose();
   };
@@ -323,12 +329,50 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                       </div>
                     </div>
 
-                    {/* Row 7: Monthly Fee */}
-                    <div className="space-y-4 md:col-span-2">
+                    {/* Row 7: Monthly Fee & T-Shirt Size */}
+                    <div className="space-y-4">
                       <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Monthly Fee (₹)</label>
                       <div className="relative group/input">
                         <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
                         <input name="fee_amount" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Enter fee amount" value={form.fee_amount} onChange={handleChange} required />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">T-Shirt Size</label>
+                      <div className="relative group/input">
+                        <Award className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                        <select name="tshirt_size" className="input-field w-full pl-14 h-16 bg-[#0a0f14] font-bold italic tracking-tight appearance-none cursor-pointer" value={form.tshirt_size} onChange={handleChange}>
+                          <option value="None">None</option>
+                          <option value="22">Size 22</option>
+                          <option value="24">Size 24</option>
+                          <option value="26">Size 26</option>
+                          <option value="28">Size 28</option>
+                          <option value="30">Size 30</option>
+                          <option value="32">Size 32</option>
+                          <option value="34">Size 34</option>
+                          <option value="36">Size 36</option>
+                          <option value="XS">Size XS</option>
+                          <option value="S">Size S</option>
+                          <option value="M">Size M</option>
+                          <option value="L">Size L</option>
+                          <option value="XL">Size XL</option>
+                          <option value="XXL">Size XXL</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Row 8: T-Shirt Status */}
+                    <div className="space-y-4 md:col-span-2">
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">T-Shirt Status</label>
+                      <div className="relative group/input">
+                        <Zap className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                        <select name="tshirt_status" className="input-field w-full pl-14 h-16 bg-[#0a0f14] font-bold italic tracking-tight appearance-none cursor-pointer" value={form.tshirt_status} onChange={handleChange}>
+                          <option value="None">None</option>
+                          <option value="Wants">Wants T-Shirt</option>
+                          <option value="Already Has">Already Has</option>
+                          <option value="Bought (Paid)">Bought (Paid)</option>
+                          <option value="Bought (Unpaid)">Bought (Unpaid)</option>
+                        </select>
                       </div>
                     </div>
                   </div>

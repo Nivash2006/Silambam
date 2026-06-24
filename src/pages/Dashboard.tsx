@@ -14,7 +14,9 @@ import {
   AlertTriangle,
   Award,
   Zap,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  Tag
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -42,6 +44,8 @@ const Dashboard: React.FC = () => {
   const [recentTournaments, setRecentTournaments] = useState<any[]>([]);
   const [smartAlerts, setSmartAlerts] = useState<SmartAlert[]>([]);
   const [topPerformer, setTopPerformer] = useState<any>(null);
+  const [tshirtCount, setTshirtCount] = useState(0);
+  const [nextTournamentData, setNextTournamentData] = useState<any>(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -59,6 +63,9 @@ const Dashboard: React.FC = () => {
       const { data: allStudents, count: studentCount } = await supabase
         .from('students')
         .select('*', { count: 'exact' });
+
+      // Calculate T-shirt wants
+      const tshirtWants = allStudents?.filter(s => s.tshirt_status === 'Wants' || s.tshirt_status === 'Bought (Unpaid)').length || 0;
 
       // 2. Fetch Monthly Payments
       const { data: payments } = await supabase
@@ -172,6 +179,31 @@ const Dashboard: React.FC = () => {
           glow: 'shadow-amber-500/10'
         },
       ]);
+
+      // Fetch next upcoming tournament
+      const { data: upcomingT } = await supabase
+        .from('upcoming_tournaments')
+        .select('*')
+        .order('date', { ascending: true })
+        .limit(1);
+
+      let nextT = null;
+      if (upcomingT && upcomingT.length > 0) {
+        const nextEvent = upcomingT[0];
+        const { count: regCount } = await supabase
+          .from('tournament_registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('tournament_id', nextEvent.id);
+        
+        nextT = {
+          ...nextEvent,
+          registrations_count: regCount || 0
+        };
+      }
+
+      setTshirtCount(tshirtWants);
+      setNextTournamentData(nextT);
+
     } catch (error) {
       console.error('Dashboard data error:', error);
     } finally {
@@ -423,6 +455,28 @@ const Dashboard: React.FC = () => {
                   <div>
                     <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-emerald-400 transition-colors">Fees Hub</p>
                     <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">Manage Fee Payments</p>
+                  </div>
+               </Link>
+               <Link to="/tournaments" className="glass-card !p-8 flex items-center gap-8 group hover:bg-amber-400/[0.03] border-white/5 !rounded-[3rem] transition-all">
+                  <div className="w-16 h-16 bg-amber-400/10 rounded-2xl flex items-center justify-center border border-amber-400/10 group-hover:scale-110 transition-transform">
+                     <Calendar className="w-7 h-7 text-amber-400" />
+                  </div>
+                  <div>
+                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-amber-400 transition-colors">Next Tournament</p>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">
+                      {nextTournamentData ? `${nextTournamentData.name} (${nextTournamentData.registrations_count} Reg)` : 'No upcoming events'}
+                    </p>
+                  </div>
+               </Link>
+               <Link to="/tournaments" className="glass-card !p-8 flex items-center gap-8 group hover:bg-purple-500/[0.03] border-white/5 !rounded-[3rem] transition-all">
+                  <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center border border-purple-500/10 group-hover:scale-110 transition-transform">
+                     <Tag className="w-7 h-7 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="font-black text-white uppercase italic text-lg tracking-tight group-hover:text-purple-400 transition-colors">T-Shirt Orders</p>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mt-1">
+                      {tshirtCount} Orders Pending Delivery
+                    </p>
                   </div>
                </Link>
             </div>

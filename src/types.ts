@@ -14,6 +14,8 @@ export interface Student {
   fee_amount: number;
   fee_status?: 'paid' | 'pending';
   photo_url?: string;
+  tshirt_status?: 'None' | 'Wants' | 'Already Has' | 'Bought (Paid)' | 'Bought (Unpaid)';
+  tshirt_size?: string;
   created_at?: string;
 }
 
@@ -54,6 +56,29 @@ export interface TournamentRecord {
   student_id: string;
   position: '1st' | '2nd' | '3rd' | 'Participation';
   created_at?: string;
+}
+
+export interface UpcomingTournament {
+  id: string;
+  name: string;
+  date: string;
+  fee_amount: number;
+  created_at?: string;
+}
+
+export interface TournamentRegistration {
+  id: string;
+  tournament_id: string;
+  student_id: string;
+  fee_status: 'paid' | 'pending';
+  created_at?: string;
+  student?: {
+    name: string;
+    belt_level: string;
+    phone: string;
+    tshirt_status: string;
+    tshirt_size: string;
+  };
 }
 
 export interface BeltPromotion {

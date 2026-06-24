@@ -17,13 +17,22 @@ import {
   ShieldCheck,
   Zap,
   ArrowUpRight,
-  Filter
+  Filter,
+  CheckCircle2,
+  DownloadCloud,
+  Users2,
+  Tag,
+  AlertCircle
 } from 'lucide-react';
-import { Student, TournamentRecord } from '../types';
+import { Student, TournamentRecord, UpcomingTournament, TournamentRegistration } from '../types';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
 import Portal from '../components/Portal';
+import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -35,8 +44,14 @@ function cn(...inputs: ClassValue[]) {
 const Tournaments: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [tournaments, setTournaments] = useState<TournamentRecord[]>([]);
+  const [upcomingTournaments, setUpcomingTournaments] = useState<UpcomingTournament[]>([]);
+  const [registrations, setRegistrations] = useState<TournamentRegistration[]>([]);
+  
+  const [activeTab, setActiveTab] = useState<'achievements' | 'upcoming' | 'tshirts'>('achievements');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  
+  // Past Achievements states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [newTournament, setNewTournament] = useState({
     name: '',
@@ -45,6 +60,20 @@ const Tournaments: React.FC = () => {
     position: 'Participation' as TournamentRecord['position']
   });
 
+  // Upcoming Tournaments states
+  const [isUpcomingFormOpen, setIsUpcomingFormOpen] = useState(false);
+  const [newUpcoming, setNewUpcoming] = useState({
+    name: '',
+    date: '',
+    fee_amount: '0'
+  });
+  const [selectedUpcoming, setSelectedUpcoming] = useState<UpcomingTournament | null>(null);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
+  // T-Shirt status counts
+  const [tshirtSearch, setTshirtSearch] = useState('');
+  const [tshirtFilter, setTshirtFilter] = useState<string>('All');
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -52,25 +81,60 @@ const Tournaments: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      
+      // 1. Fetch Students
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('*')
         .order('name');
-      
       if (studentError) throw studentError;
       setStudents(studentData || []);
 
+      // 2. Fetch Past Achievements
       const { data: tournamentData, error: tournamentError } = await supabase
         .from('tournaments')
         .select('*')
         .order('date', { ascending: false });
-      
       if (tournamentError) throw tournamentError;
       setTournaments(tournamentData || []);
+
+      // 3. Fetch Upcoming Tournaments
+      const { data: upcomingData, error: upcomingError } = await supabase
+        .from('upcoming_tournaments')
+        .select('*')
+        .order('date', { ascending: true });
+      if (upcomingError) throw upcomingError;
+      setUpcomingTournaments(upcomingData || []);
+
+      // 4. Fetch Registrations
+      const { data: regData, error: regError } = await supabase
+        .from('tournament_registrations')
+        .select(`
+          *,
+          student:students(name, belt_level, phone, tshirt_status, tshirt_size)
+        `);
+      if (regError) throw regError;
+      setRegistrations(regData || []);
+
     } catch (error) {
-      toast.error('Failed to load tournament records.');
+      toast.error('Failed to load tournament data.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRegistrations = async () => {
+    try {
+      const { data: regData, error: regError } = await supabase
+        .from('tournament_registrations')
+        .select(`
+          *,
+          student:students(name, belt_level, phone, tshirt_status, tshirt_size)
+        `);
+      if (regError) throw regError;
+      setRegistrations(regData || []);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -92,7 +156,159 @@ const Tournaments: React.FC = () => {
     }
   };
 
-  const filtered = tournaments.filter(t =>
+  // Add Upcoming Tournament
+  const handleAddUpcoming = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const loadToast = toast.loading('Creating upcoming tournament...');
+    try {
+      const { error } = await supabase
+        .from('upcoming_tournaments')
+        .insert([{
+          name: newUpcoming.name,
+          date: newUpcoming.date,
+          fee_amount: parseInt(newUpcoming.fee_amount) || 0
+        }]);
+      if (error) throw error;
+      toast.success('Upcoming tournament created successfully.', { id: loadToast });
+      setIsUpcomingFormOpen(false);
+      setNewUpcoming({ name: '', date: '', fee_amount: '0' });
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to create tournament.', { id: loadToast });
+    }
+  };
+
+  // Register Student to Upcoming Tournament
+  const handleRegisterStudent = async (studentId: string) => {
+    if (!selectedUpcoming) return;
+    try {
+      const { error } = await supabase
+        .from('tournament_registrations')
+        .insert([{
+          tournament_id: selectedUpcoming.id,
+          student_id: studentId,
+          fee_status: 'pending'
+        }]);
+      if (error) throw error;
+      toast.success('Student registered successfully.');
+      fetchRegistrations();
+    } catch (err) {
+      toast.error('Student already registered.');
+    }
+  };
+
+  // Remove Student Registration
+  const handleUnregisterStudent = async (regId: string) => {
+    try {
+      const { error } = await supabase
+        .from('tournament_registrations')
+        .delete()
+        .eq('id', regId);
+      if (error) throw error;
+      toast.success('Registration removed.');
+      fetchRegistrations();
+    } catch (err) {
+      toast.error('Failed to remove student registration.');
+    }
+  };
+
+  // Toggle Fee Status
+  const handleToggleFeeStatus = async (regId: string, currentStatus: 'paid' | 'pending') => {
+    const newStatus = currentStatus === 'paid' ? 'pending' : 'paid';
+    try {
+      const { error } = await supabase
+        .from('tournament_registrations')
+        .update({ fee_status: newStatus })
+        .eq('id', regId);
+      if (error) throw error;
+      toast.success(`Payment status marked as ${newStatus}.`);
+      fetchRegistrations();
+    } catch (err) {
+      toast.error('Failed to update payment status.');
+    }
+  };
+
+  // Inline T-Shirt updates
+  const handleUpdateTshirt = async (studentId: string, updates: Partial<Student>) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update(updates)
+        .eq('id', studentId);
+      if (error) throw error;
+      toast.success('T-shirt details updated.');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to update T-shirt details.');
+    }
+  };
+
+  // PDF Export for Upcoming Tournament
+  const handleDownloadRosterPDF = (tournament: UpcomingTournament, list: TournamentRegistration[]) => {
+    const doc = new jsPDF();
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(16, 185, 129);
+    doc.text("Maha Silambam Academy", 14, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(255, 255, 255);
+    doc.setFillColor(15, 23, 42);
+    doc.text(`TOURNAMENT PARTICIPATION ROSTER`, 14, 30);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Tournament: ${tournament.name}`, 14, 38);
+    doc.text(`Date: ${format(new Date(tournament.date), 'dd MMMM yyyy')}`, 14, 44);
+    doc.text(`Registration Fee: Rs. ${tournament.fee_amount}`, 14, 50);
+
+    const headers = [['Student Name', 'Belt Rank', 'Phone Number', 'T-Shirt Size', 'T-Shirt Status', 'Fee Payment']];
+    const data = list.map(reg => [
+      reg.student?.name || 'N/A',
+      reg.student?.belt_level || 'N/A',
+      reg.student?.phone || 'N/A',
+      reg.student?.tshirt_size || 'None',
+      reg.student?.tshirt_status || 'None',
+      reg.fee_status === 'paid' ? 'Paid' : 'Pending'
+    ]);
+
+    doc.autoTable({
+      head: headers,
+      body: data,
+      startY: 56,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], fontStyle: 'bold' },
+      styles: { fontSize: 9 }
+    });
+
+    // Signature Block
+    const finalY = (doc as any).lastAutoTable.finalY + 20;
+    doc.setFontSize(10);
+    doc.text("Master / Instructor Signature: _______________________", 14, finalY);
+
+    doc.save(`${tournament.name.replace(/ /g, '_')}_roster.pdf`);
+    toast.success('Roster PDF downloaded successfully.');
+  };
+
+  // Excel Export for Upcoming Tournament
+  const handleDownloadRosterExcel = (tournament: UpcomingTournament, list: TournamentRegistration[]) => {
+    const data = list.map(reg => ({
+      'Student Name': reg.student?.name || 'N/A',
+      'Belt Rank': reg.student?.belt_level || 'N/A',
+      'Phone Number': reg.student?.phone || 'N/A',
+      'T-Shirt Size': reg.student?.tshirt_size || 'None',
+      'T-Shirt Status': reg.student?.tshirt_status || 'None',
+      'Fee Status': reg.fee_status === 'paid' ? 'Paid' : 'Pending'
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Roster");
+    XLSX.writeFile(workbook, `${tournament.name.replace(/ /g, '_')}_roster.xlsx`);
+    toast.success('Roster Excel downloaded successfully.');
+  };
+
+  const filteredPast = tournaments.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -102,6 +318,26 @@ const Tournaments: React.FC = () => {
     podiums: tournaments.filter(t => ['1st', '2nd', '3rd'].includes(t.position)).length,
   };
 
+  // T-Shirt tab filters
+  const filteredTshirts = students.filter(s => {
+    const matchesSearch = s.name.toLowerCase().includes(tshirtSearch.toLowerCase()) ||
+                          (s.class_std || '').toLowerCase().includes(tshirtSearch.toLowerCase());
+    const matchesFilter = tshirtFilter === 'All' || s.tshirt_status === tshirtFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const tshirtStats = {
+    wants: students.filter(s => s.tshirt_status === 'Wants').length,
+    paid: students.filter(s => s.tshirt_status === 'Bought (Paid)').length,
+    unpaid: students.filter(s => s.tshirt_status === 'Bought (Unpaid)').length,
+    has: students.filter(s => s.tshirt_status === 'Already Has').length,
+  };
+
+  const selectedRegs = registrations.filter(r => r.tournament_id === selectedUpcoming?.id);
+  const unregisteredStudents = students.filter(s => 
+    !selectedRegs.some(r => r.student_id === s.id)
+  );
+
   if (loading && tournaments.length === 0) {
     return (
       <div className="space-y-12 animate-in fade-in duration-700">
@@ -109,6 +345,7 @@ const Tournaments: React.FC = () => {
            <div className="h-24 w-1/3 skeleton rounded-3xl" />
            <div className="h-16 w-32 skeleton rounded-2xl" />
         </div>
+        <div className="h-14 skeleton rounded-2xl" />
         <div className="grid grid-cols-3 gap-12">
            <div className="col-span-2 space-y-8">
               {[1, 2, 3].map(i => <div key={i} className="h-40 skeleton rounded-[2.5rem]" />)}
@@ -131,197 +368,484 @@ const Tournaments: React.FC = () => {
              <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.5em]">Achievements & Honors</p>
           </div>
           <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white italic uppercase leading-none">
-            Tournament <span className="text-emerald-500 text-glow">Records</span>
+            Tournament <span className="text-emerald-500 text-glow">Hub</span>
           </h2>
-          <div className="flex items-center gap-6 mt-8">
-            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                <ShieldCheck className="w-3 h-3 text-emerald-400" />
-                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Academy Achievements</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/[0.03] rounded-full border border-white/5">
-                <Star className="w-3 h-3 text-white/40" />
-                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Records: {tournaments.length}</span>
-            </div>
-          </div>
         </motion.div>
-        <button 
-          onClick={() => setIsFormOpen(true)}
-          className="btn-primary !h-20 !px-12 group shadow-[0_20px_60px_rgba(16,185,129,0.3)] !rounded-[2rem] text-[11px] font-black uppercase tracking-[0.3em]"
-        >
-          <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
-          Add Record
-        </button>
+        
+        <div className="flex flex-wrap gap-4">
+          {activeTab === 'achievements' && (
+            <button 
+              onClick={() => setIsFormOpen(true)}
+              className="btn-primary !h-16 !px-8 group shadow-[0_20px_60px_rgba(16,185,129,0.3)] !rounded-[2rem] text-[10px] font-black uppercase tracking-widest"
+            >
+              <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+              Add Record
+            </button>
+          )}
+          {activeTab === 'upcoming' && (
+            <button 
+              onClick={() => setIsUpcomingFormOpen(true)}
+              className="btn-primary !h-16 !px-8 group shadow-[0_20px_60px_rgba(16,185,129,0.3)] !rounded-[2rem] text-[10px] font-black uppercase tracking-widest"
+            >
+              <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+              Create Tournament
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
-        {/* Tournament Feed */}
-        <div className="xl:col-span-8 space-y-10">
-          <div className="glass-card !p-4 !rounded-[2.5rem] border-white/5 bg-white/[0.01] flex items-center px-8 gap-6 group focus-within:ring-2 ring-emerald-500/20 transition-all">
-            <Search className="w-6 h-6 text-white/10 group-focus-within:text-emerald-500 transition-colors" />
-            <input 
-              type="text" 
-              placeholder="Search tournaments..." 
-              className="bg-transparent w-full h-16 text-lg font-bold text-white placeholder:text-white/5 focus:outline-none italic"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/10 text-[10px] font-black text-white/40">
-               <Filter className="w-3 h-3" />
-               ALL RECORDS
-            </div>
-          </div>
+      {/* Tabs Navigation */}
+      <div className="flex border-b border-white/5 pb-1 gap-2">
+        {[
+          { id: 'achievements', label: 'Achievements', icon: Trophy },
+          { id: 'upcoming', label: 'Upcoming Tournaments', icon: Calendar },
+          { id: 'tshirts', label: 'T-Shirt Management', icon: Tag },
+        ].map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id as any); setSelectedUpcoming(null); }}
+              className={cn(
+                "flex items-center gap-3 px-6 py-4.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-t-2xl border-b-2 border-transparent",
+                activeTab === tab.id 
+                  ? "border-emerald-500 text-emerald-400 bg-white/[0.02]" 
+                  : "text-white/40 hover:text-white"
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-          <div className="space-y-6">
-            <AnimatePresence mode="popLayout">
-              {filtered.map((t, idx) => {
-                const student = students.find(s => s.id === t.student_id);
-                const isGold = t.position === '1st';
-                const isSilver = t.position === '2nd';
-                const isBronze = t.position === '3rd';
-                return (
-                  <motion.div 
-                    layout
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    key={t.id} 
-                    className="glass-card group hover:scale-[1.02] transition-all duration-700 border-white/5 !rounded-[3rem] !p-10 relative overflow-hidden"
-                  >
-                    <div className={cn(
-                      "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none",
-                      isGold ? "bg-gradient-to-r from-yellow-500/[0.03] to-transparent" : 
-                      isSilver ? "bg-gradient-to-r from-slate-400/[0.03] to-transparent" :
-                      isBronze ? "bg-gradient-to-r from-orange-500/[0.03] to-transparent" :
-                      "bg-gradient-to-r from-emerald-500/[0.02] to-transparent"
-                    )} />
-                    
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-10 relative z-10">
-                      <div className="flex items-center gap-10 w-full">
+      {/* Render Active Tab */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+        {activeTab === 'achievements' && (
+          <>
+            {/* Achievements List */}
+            <div className="xl:col-span-8 space-y-10">
+              <div className="glass-card !p-4 !rounded-[2.5rem] border-white/5 bg-white/[0.01] flex items-center px-8 gap-6 group focus-within:ring-2 ring-emerald-500/20 transition-all">
+                <Search className="w-6 h-6 text-white/10 group-focus-within:text-emerald-500 transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Search tournaments..." 
+                  className="bg-transparent w-full h-16 text-lg font-bold text-white placeholder:text-white/5 focus:outline-none italic"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-6">
+                <AnimatePresence mode="popLayout">
+                  {filteredPast.map((t, idx) => {
+                    const student = students.find(s => s.id === t.student_id);
+                    const isGold = t.position === '1st';
+                    const isSilver = t.position === '2nd';
+                    const isBronze = t.position === '3rd';
+                    return (
+                      <motion.div 
+                        layout
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        key={t.id} 
+                        className="glass-card group hover:scale-[1.02] transition-all duration-700 border-white/5 !rounded-[3rem] !p-10 relative overflow-hidden"
+                      >
                         <div className={cn(
-                          "w-28 h-28 rounded-[2rem] flex items-center justify-center border transition-all duration-1000 group-hover:rotate-[8deg] group-hover:scale-110 shadow-2xl shrink-0",
-                          isGold ? 'bg-yellow-400/10 text-yellow-500 border-yellow-400/20 shadow-[0_0_40px_rgba(234,179,8,0.1)]' :
-                          isSilver ? 'bg-slate-300/10 text-slate-300 border-slate-300/20 shadow-[0_0_40px_rgba(203,213,225,0.1)]' :
-                          isBronze ? 'bg-orange-400/10 text-orange-500 border-orange-400/20 shadow-[0_0_40px_rgba(251,146,60,0.1)]' :
-                          'bg-white/5 text-white/10 border-white/5'
-                        )}>
-                          {isGold ? <Crown className="w-14 h-14" /> : <Medal className="w-14 h-14" />}
-                        </div>
-                        <div className="space-y-4 flex-1">
-                          <h3 className="font-black text-3xl text-white italic uppercase tracking-tighter group-hover:text-emerald-400 transition-colors leading-none">{t.name}</h3>
-                          <div className="flex flex-wrap items-center gap-6 mt-3">
-                            <span className="flex items-center gap-2.5 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] font-mono">
-                              <Calendar className="w-4 h-4 text-emerald-500/50" /> {t.date}
-                            </span>
-                            <div className="w-1.5 h-1.5 rounded-full bg-white/[0.05]" />
-                            <span className="flex items-center gap-2.5 text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">
-                              <Target className="w-4 h-4" /> {student?.name || 'Grandmaster'}
+                          "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none",
+                          isGold ? "bg-gradient-to-r from-yellow-500/[0.03] to-transparent" : 
+                          isSilver ? "bg-gradient-to-r from-slate-400/[0.03] to-transparent" :
+                          isBronze ? "bg-gradient-to-r from-orange-500/[0.03] to-transparent" :
+                          "bg-gradient-to-r from-emerald-500/[0.02] to-transparent"
+                        )} />
+                        
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-10 relative z-10">
+                          <div className="flex items-center gap-10 w-full">
+                            <div className={cn(
+                              "w-28 h-28 rounded-[2rem] flex items-center justify-center border transition-all duration-1000 group-hover:rotate-[8deg] group-hover:scale-110 shadow-2xl shrink-0",
+                              isGold ? 'bg-yellow-400/10 text-yellow-500 border-yellow-400/20 shadow-[0_0_40px_rgba(234,179,8,0.1)]' :
+                              isSilver ? 'bg-slate-300/10 text-slate-300 border-slate-300/20 shadow-[0_0_40px_rgba(203,213,225,0.1)]' :
+                              isBronze ? 'bg-orange-400/10 text-orange-500 border-orange-400/20 shadow-[0_0_40px_rgba(251,146,60,0.1)]' :
+                              'bg-white/5 text-white/10 border-white/5'
+                            )}>
+                              {isGold ? <Crown className="w-14 h-14" /> : <Medal className="w-14 h-14" />}
+                            </div>
+                            <div className="space-y-4 flex-1">
+                              <h3 className="font-black text-3xl text-white italic uppercase tracking-tighter group-hover:text-emerald-400 transition-colors leading-none">{t.name}</h3>
+                              <div className="flex flex-wrap items-center gap-6 mt-3">
+                                <span className="flex items-center gap-2.5 text-[10px] font-black text-white/30 uppercase tracking-[0.3em] font-mono">
+                                  <Calendar className="w-4 h-4 text-emerald-500/50" /> {t.date}
+                                </span>
+                                <div className="w-1.5 h-1.5 rounded-full bg-white/[0.05]" />
+                                <span className="flex items-center gap-2.5 text-[10px] font-black text-emerald-500 uppercase tracking-[0.3em]">
+                                  <Target className="w-4 h-4" /> {student?.name || 'Grandmaster'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 w-full md:w-auto">
+                            <span className={cn(
+                              "inline-flex items-center gap-4 text-[11px] font-black px-10 py-5 rounded-[1.5rem] uppercase tracking-[0.3em] border transition-all duration-500 w-full md:w-auto justify-center",
+                              isGold ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 shadow-xl' :
+                              isSilver ? 'bg-slate-300/10 text-slate-300 border-slate-300/20' :
+                              isBronze ? 'bg-orange-400/10 text-orange-500 border-orange-400/20' :
+                              'bg-white/5 text-white/40 border-white/5'
+                            )}>
+                              {isGold && <Star className="w-5 h-5 animate-pulse" />}
+                              {t.position === 'Participation' ? 'Participation' : `${t.position} Place`}
                             </span>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right shrink-0 w-full md:w-auto">
-                        <span className={cn(
-                          "inline-flex items-center gap-4 text-[11px] font-black px-10 py-5 rounded-[1.5rem] uppercase tracking-[0.3em] border transition-all duration-500 w-full md:w-auto justify-center",
-                          isGold ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20 shadow-xl' :
-                          isSilver ? 'bg-slate-300/10 text-slate-300 border-slate-300/20' :
-                          isBronze ? 'bg-orange-400/10 text-orange-500 border-orange-400/20' :
-                          'bg-white/5 text-white/40 border-white/5'
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+                {filteredPast.length === 0 && (
+                   <div className="flex flex-col items-center justify-center py-32 space-y-6 opacity-20">
+                      <Trophy className="w-20 h-20" />
+                      <p className="text-[10px] font-black uppercase tracking-[0.5em]">No tournament records found</p>
+                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Achievements Sidebar */}
+            <div className="xl:col-span-4 space-y-10">
+              <div className="glass-card !rounded-[3rem] !p-12 relative overflow-hidden group border-white/5 bg-gradient-to-br from-emerald-500/[0.02] to-transparent">
+                <div className="absolute -top-12 -right-12 p-12 opacity-[0.03] scale-[2.5] pointer-events-none group-hover:rotate-12 transition-transform duration-1000 group-hover:scale-[3]">
+                  <Trophy className="w-32 h-32 text-emerald-500" />
+                </div>
+                
+                <h3 className="text-[10px] font-black italic uppercase tracking-[0.4em] mb-14 flex items-center gap-4 text-emerald-500">
+                  <TrendingUp className="w-5 h-5 animate-pulse" /> Statistics
+                </h3>
+
+                <div className="space-y-12">
+                  {[
+                    { label: 'Gold Medals', value: stats.gold, icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+                    { label: 'Silver Medals', value: stats.silver, icon: Award, color: 'text-slate-300', bg: 'bg-slate-300/10' },
+                    { label: 'Podium Finishes', value: stats.podiums, icon: Trophy, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+                  ].map((stat, idx) => (
+                    <motion.div 
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.5 + idx * 0.1 }}
+                      key={idx} 
+                      className="flex items-center justify-between group/stat"
+                    >
+                      <div className="flex items-center gap-8">
+                        <div className={cn(
+                          "w-16 h-16 rounded-[1.2rem] flex items-center justify-center border transition-all duration-500 group-hover/stat:scale-110 group-hover/stat:rotate-6",
+                          stat.bg,
+                          stat.color.replace('text', 'border') + '/20'
                         )}>
-                          {isGold && <Star className="w-5 h-5 animate-pulse" />}
-                          {t.position === 'Participation' ? 'Participation' : `${t.position} Place`}
-                        </span>
+                          <stat.icon className={cn("w-8 h-8", stat.color)} />
+                        </div>
+                        <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.3em]">{stat.label}</span>
+                      </div>
+                      <span className="text-5xl font-black text-white italic tracking-tighter text-glow-white">{stat.value}</span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="mt-16 pt-12 border-t border-white/5 relative">
+                  <div className="flex justify-between items-center mb-6">
+                    <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Achievement Rate</span>
+                    <span className="text-2xl font-black text-emerald-500 italic">Excellent</span>
+                  </div>
+                  <div className="w-full bg-black/40 h-4 rounded-full overflow-hidden border border-white/5 relative p-0.5">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: '92%' }}
+                      transition={{ duration: 2.5, ease: "circOut" }}
+                      className="bg-emerald-500 h-full rounded-full shadow-[0_0_30px_rgba(16,185,129,0.4)] relative overflow-hidden" 
+                    >
+                       <div className="absolute inset-x-0 bottom-0 top-0 bg-white/20 animate-pulse" />
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Tab 2: Upcoming Tournaments */}
+        {activeTab === 'upcoming' && (
+          <div className="xl:col-span-12 space-y-12">
+            {!selectedUpcoming ? (
+              // Upcoming Tournaments List
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
+                {upcomingTournaments.map((ut) => {
+                  const regsCount = registrations.filter(r => r.tournament_id === ut.id).length;
+                  const paidCount = registrations.filter(r => r.tournament_id === ut.id && r.fee_status === 'paid').length;
+                  return (
+                    <div 
+                      key={ut.id}
+                      onClick={() => setSelectedUpcoming(ut)}
+                      className="glass-card group hover:scale-[1.02] border-white/5 hover:border-emerald-500/20 cursor-pointer !p-8 !rounded-[2.5rem] transition-all relative overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between mb-8">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                          <Calendar className="w-6 h-6 text-emerald-500" />
+                        </div>
+                        <ArrowUpRight className="w-5 h-5 text-white/20 group-hover:text-emerald-500 transition-colors" />
+                      </div>
+                      
+                      <h4 className="text-2xl font-black text-white italic uppercase tracking-tight group-hover:text-emerald-400 transition-colors mb-3">{ut.name}</h4>
+                      <p className="text-[10px] text-white/30 font-mono font-black uppercase tracking-widest">{format(new Date(ut.date), 'dd MMMM yyyy')}</p>
+                      
+                      <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
+                        <div>
+                          <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Entry Fee</p>
+                          <p className="text-xl font-black text-emerald-400">₹{ut.fee_amount}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">Registered</p>
+                          <p className="text-xl font-black text-white">{regsCount} Students <span className="text-xs text-white/40">({paidCount} Paid)</span></p>
+                        </div>
                       </div>
                     </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-            {filtered.length === 0 && (
-               <div className="flex flex-col items-center justify-center py-32 space-y-6 opacity-20">
-                  <Trophy className="w-20 h-20" />
-                  <p className="text-[10px] font-black uppercase tracking-[0.5em]">No tournament records found</p>
-               </div>
+                  );
+                })}
+                {upcomingTournaments.length === 0 && (
+                  <div className="col-span-3 text-center py-24 glass-card border-dashed border-white/5 opacity-30">
+                    <Calendar className="w-16 h-16 mx-auto mb-4" />
+                    <p className="text-xs font-black uppercase tracking-widest">No upcoming tournaments scheduled</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Selected Upcoming Tournament Registration details
+              <div className="space-y-10 animate-in fade-in duration-500">
+                <button 
+                  onClick={() => setSelectedUpcoming(null)}
+                  className="btn-secondary !h-12 !px-6 text-[10px] font-black uppercase tracking-widest"
+                >
+                  ← Back to List
+                </button>
+
+                <div className="glass-card !p-10 !rounded-[3rem] border-white/5 bg-white/[0.01] flex flex-col lg:flex-row lg:items-center justify-between gap-8 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.02] rounded-full blur-3xl" />
+                  
+                  <div>
+                    <h3 className="text-3xl sm:text-4xl font-black text-white italic uppercase tracking-tighter leading-none mb-3">{selectedUpcoming.name}</h3>
+                    <div className="flex flex-wrap items-center gap-6 mt-4 text-[10px] font-black text-white/30 uppercase tracking-widest">
+                      <span className="flex items-center gap-2 font-mono"><Calendar className="w-4 h-4 text-emerald-500" /> {format(new Date(selectedUpcoming.date), 'dd MMMM yyyy')}</span>
+                      <span>•</span>
+                      <span>Entry Fee: <span className="text-emerald-400">₹{selectedUpcoming.fee_amount}</span></span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 z-10">
+                    <button 
+                      onClick={() => handleDownloadRosterPDF(selectedUpcoming, selectedRegs)}
+                      className="btn-secondary !h-14 !px-6 !rounded-xl"
+                    >
+                      <DownloadCloud className="w-5 h-5 text-emerald-500" />
+                      Download PDF
+                    </button>
+                    <button 
+                      onClick={() => handleDownloadRosterExcel(selectedUpcoming, selectedRegs)}
+                      className="btn-secondary !h-14 !px-6 !rounded-xl"
+                    >
+                      <Save className="w-5 h-5 text-emerald-400" />
+                      Download Excel
+                    </button>
+                    <button 
+                      onClick={() => setIsRegisterOpen(true)}
+                      className="btn-primary !h-14 !px-8 !rounded-xl shadow-lg shadow-emerald-500/20"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Register Students
+                    </button>
+                  </div>
+                </div>
+
+                {/* Participant roster table list */}
+                <div className="glass-card !p-0 !rounded-[3rem] border-white/5 overflow-hidden">
+                  <div className="px-8 py-6 bg-white/[0.02] border-b border-white/5 flex items-center justify-between">
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-white/40">
+                      Participating Students ({selectedRegs.length} registered)
+                    </h4>
+                  </div>
+                  
+                  <div className="divide-y divide-white/[0.03]">
+                    {selectedRegs.map((reg) => (
+                      <div key={reg.id} className="p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 group hover:bg-white/[0.01] transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors uppercase italic tracking-tight truncate leading-none mb-3">
+                            {reg.student?.name}
+                          </h4>
+                          <div className="flex flex-wrap gap-4 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                            <span>Belt: {reg.student?.belt_level}</span>
+                            <span>•</span>
+                            <span>Phone: {reg.student?.phone}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1.5">
+                              <Tag className="w-3.5 h-3.5 text-emerald-500/80" /> 
+                              T-Shirt Size: <strong className="text-emerald-400 font-mono text-xs">{reg.student?.tshirt_size || 'None'}</strong> ({reg.student?.tshirt_status})
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6 justify-between md:justify-end">
+                          <button
+                            onClick={() => handleToggleFeeStatus(reg.id, reg.fee_status)}
+                            className={cn(
+                              "px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest border transition-all",
+                              reg.fee_status === 'paid' 
+                                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400 shadow-md shadow-emerald-500/10"
+                                : "bg-rose-500/10 border-rose-500/20 text-rose-500"
+                            )}
+                          >
+                            Fee: {reg.fee_status === 'paid' ? 'Paid' : 'Pending'}
+                          </button>
+                          
+                          <button
+                            onClick={() => handleUnregisterStudent(reg.id)}
+                            className="p-3.5 bg-white/[0.02] border border-white/5 rounded-xl hover:bg-rose-500/20 hover:text-rose-500 transition-all text-white/20"
+                            title="Remove registration"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {selectedRegs.length === 0 && (
+                      <div className="py-24 text-center text-white/20 uppercase tracking-widest text-[10px] font-black">
+                        No students registered for this event yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
-        </div>
+        )}
 
-        {/* Intelligence Module */}
-        <div className="xl:col-span-4 space-y-10">
-          <div className="glass-card !rounded-[3rem] !p-12 relative overflow-hidden group border-white/5 bg-gradient-to-br from-emerald-500/[0.02] to-transparent">
-            <div className="absolute -top-12 -right-12 p-12 opacity-[0.03] scale-[2.5] pointer-events-none group-hover:rotate-12 transition-transform duration-1000 group-hover:scale-[3]">
-              <Trophy className="w-32 h-32 text-emerald-500" />
-            </div>
-            
-            <h3 className="text-[10px] font-black italic uppercase tracking-[0.4em] mb-14 flex items-center gap-4 text-emerald-500">
-              <TrendingUp className="w-5 h-5 animate-pulse" /> Statistics
-            </h3>
-
-            <div className="space-y-12">
+        {/* Tab 3: T-Shirt Management */}
+        {activeTab === 'tshirts' && (
+          <div className="xl:col-span-12 space-y-12">
+            {/* T-Shirt Stats indicators */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {[
-                { label: 'Gold Medals', value: stats.gold, icon: Crown, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-                { label: 'Silver Medals', value: stats.silver, icon: Award, color: 'text-slate-300', bg: 'bg-slate-300/10' },
-                { label: 'Podium Finishes', value: stats.podiums, icon: Trophy, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-              ].map((stat, idx) => (
-                <motion.div 
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5 + idx * 0.1 }}
-                  key={idx} 
-                  className="flex items-center justify-between group/stat"
-                >
-                  <div className="flex items-center gap-8">
-                    <div className={cn(
-                      "w-16 h-16 rounded-[1.2rem] flex items-center justify-center border transition-all duration-500 group-hover/stat:scale-110 group-hover/stat:rotate-6",
-                      stat.bg,
-                      stat.color.replace('text', 'border') + '/20'
-                    )}>
-                      <stat.icon className={cn("w-8 h-8", stat.color)} />
-                    </div>
-                    <span className="text-[11px] font-black text-white/30 uppercase tracking-[0.3em]">{stat.label}</span>
+                { label: 'Wants T-Shirt', value: tshirtStats.wants, color: 'text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/20' },
+                { label: 'Already Has', value: tshirtStats.has, color: 'text-white/60', bg: 'bg-white/5', border: 'border-white/10' },
+                { label: 'Bought (Paid)', value: tshirtStats.paid, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+                { label: 'Bought (Unpaid)', value: tshirtStats.unpaid, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' }
+              ].map((stat, i) => (
+                <div key={i} className="glass-card !p-6 !rounded-2xl border-white/5 bg-white/[0.01] flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">{stat.label}</p>
+                    <p className={cn("text-3xl font-black italic", stat.color)}>{stat.value}</p>
                   </div>
-                  <span className="text-5xl font-black text-white italic tracking-tighter text-glow-white">{stat.value}</span>
-                </motion.div>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center border", stat.bg, stat.border)}>
+                    <Tag className="w-5 h-5" />
+                  </div>
+                </div>
               ))}
             </div>
 
-            <div className="mt-16 pt-12 border-t border-white/5 relative">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">Achievement Rate</span>
-                <span className="text-2xl font-black text-emerald-500 italic">Excellent</span>
+            {/* Filter controls */}
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1 glass-card !p-4 !rounded-[2rem] border-white/5 bg-white/[0.01] flex items-center px-6 gap-4">
+                <Search className="w-5 h-5 text-white/20" />
+                <input 
+                  type="text"
+                  placeholder="Search students by name or class..."
+                  className="bg-transparent flex-1 focus:outline-none text-white font-bold"
+                  value={tshirtSearch}
+                  onChange={e => setTshirtSearch(e.target.value)}
+                />
               </div>
-              <div className="w-full bg-black/40 h-4 rounded-full overflow-hidden border border-white/5 relative p-0.5">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: '92%' }}
-                  transition={{ duration: 2.5, ease: "circOut" }}
-                  className="bg-emerald-500 h-full rounded-full shadow-[0_0_30px_rgba(16,185,129,0.4)] relative overflow-hidden" 
-                >
-                   <div className="absolute inset-x-0 bottom-0 top-0 bg-white/20 animate-pulse" />
-                </motion.div>
+
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                {['All', 'Wants', 'Already Has', 'Bought (Paid)', 'Bought (Unpaid)', 'None'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setTshirtFilter(f)}
+                    className={cn(
+                      "px-5 py-2 rounded-xl text-[9px] font-black border uppercase tracking-widest transition-all whitespace-nowrap",
+                      tshirtFilter === f 
+                        ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20"
+                        : "bg-white/[0.02] border-white/5 text-white/30 hover:text-white"
+                    )}
+                  >
+                    {f}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
 
-          <div className="glass-card !p-12 !rounded-[3rem] border-white/5 bg-white/[0.01] space-y-8">
-             <div className="flex items-center gap-4 text-emerald-500">
-                <Zap className="w-5 h-5 fill-emerald-500" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.4em]">Student Inspiration</h4>
-             </div>
-             <p className="text-[11px] text-white/40 leading-[2] italic uppercase font-bold tracking-wider">
-                "The records in this archive represent verified student achievements and active participation in tournaments."
-             </p>
-             <div className="h-px w-1/4 bg-emerald-500/20" />
-             <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full border border-emerald-500/30 flex items-center justify-center">
-                   <ShieldCheck className="w-5 h-5 text-emerald-500" />
+            {/* Students T-Shirt List */}
+            <div className="grid grid-cols-1 gap-5">
+              {filteredTshirts.map(student => (
+                <div 
+                  key={student.id} 
+                  className="glass-card flex flex-col md:flex-row md:items-center justify-between gap-6 !p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-3xl"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xl font-black text-white italic uppercase tracking-tight">{student.name}</h4>
+                    <div className="flex flex-wrap gap-4 mt-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                      <span>Phone: <strong className="text-white/60">{student.phone || 'N/A'}</strong></span>
+                      <span>•</span>
+                      <span>Age: <strong className="text-white/60">{student.age} Yrs</strong></span>
+                      <span>•</span>
+                      <span>Class: <strong className="text-white/60">{student.class_std || 'N/A'}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-6">
+                    {/* Size Select Dropdown */}
+                    <div className="space-y-1 shrink-0 w-36">
+                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Size</label>
+                      <div className="relative">
+                        <select
+                          value={student.tshirt_size || 'None'}
+                          onChange={(e) => handleUpdateTshirt(student.id, { tshirt_size: e.target.value })}
+                          className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                        >
+                          <option value="None">None</option>
+                          {['22', '24', '26', '28', '30', '32', '34', '36', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
+                            <option key={sz} value={sz}>Size {sz}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Status Select Dropdown */}
+                    <div className="space-y-1 shrink-0 w-44">
+                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Status</label>
+                      <div className="relative">
+                        <select
+                          value={student.tshirt_status || 'None'}
+                          onChange={(e) => handleUpdateTshirt(student.id, { tshirt_status: e.target.value as any })}
+                          className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                        >
+                          <option value="None">None</option>
+                          <option value="Wants">Wants T-Shirt</option>
+                          <option value="Already Has">Already Has</option>
+                          <option value="Bought (Paid)">Bought (Paid)</option>
+                          <option value="Bought (Unpaid)">Bought (Unpaid)</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.3em]">Status: Authenticated</span>
-             </div>
+              ))}
+              {filteredTshirts.length === 0 && (
+                <div className="py-24 text-center glass-card border-dashed border-white/5 text-white/20 uppercase tracking-widest text-xs font-black">
+                  No students match the criteria
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Modern Overlay Form */}
+      {/* achievements record creation Modal */}
       <AnimatePresence>
         {isFormOpen && (
           <Portal>
@@ -436,6 +960,168 @@ const Tournaments: React.FC = () => {
           </Portal>
         )}
       </AnimatePresence>
+
+      {/* upcoming event creation Modal */}
+      <AnimatePresence>
+        {isUpcomingFormOpen && (
+          <Portal>
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsUpcomingFormOpen(false)}
+                className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
+                style={{ position: 'fixed' }}
+              />
+              
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                className="glass-card !rounded-[4rem] w-full max-w-2xl relative z-20 border-white/10 !p-12 lg:!p-16 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto"
+              >
+                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                
+                <div className="flex items-center justify-between mb-16 relative z-30">
+                  <div>
+                    <h3 className="text-5xl font-black italic uppercase tracking-tighter text-white leading-none">Schedule <span className="text-emerald-500">Tournament</span></h3>
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.5em] mt-4">
+                       Create Upcoming Event
+                    </p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setIsUpcomingFormOpen(false)}
+                    className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all group border border-white/5"
+                  >
+                    <X className="w-6 h-6 group-hover:rotate-90 transition-transform" />
+                  </button>
+                </div>
+
+                <form className="space-y-10 relative z-30" onSubmit={handleAddUpcoming}>
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Tournament Name</label>
+                    <div className="relative group/input">
+                      <Trophy className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50" />
+                      <input 
+                        required 
+                        className="bg-black/40 border border-white/5 w-full h-20 pl-16 pr-8 rounded-[1.5rem] text-white font-black text-xl italic focus:outline-none focus:ring-2 ring-emerald-500/20" 
+                        placeholder="Enter tournament name..."
+                        value={newUpcoming.name} 
+                        onChange={e => setNewUpcoming({...newUpcoming, name: e.target.value})} 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Date</label>
+                      <div className="relative group/date">
+                         <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50" />
+                         <input 
+                          type="date" 
+                          required 
+                          className="bg-black/40 border border-white/5 w-full h-20 pl-16 pr-8 rounded-[1.5rem] text-white font-black text-sm focus:outline-none focus:ring-2 ring-emerald-500/20 font-mono" 
+                          value={newUpcoming.date} 
+                          onChange={e => setNewUpcoming({...newUpcoming, date: e.target.value})} 
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Entry Fee (₹)</label>
+                      <div className="relative group/input">
+                        <Award className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500/50" />
+                        <input 
+                          type="number"
+                          required
+                          className="bg-black/40 border border-white/5 w-full h-20 pl-16 pr-8 rounded-[1.5rem] text-white font-black text-sm focus:outline-none focus:ring-2 ring-emerald-500/20"
+                          value={newUpcoming.fee_amount} 
+                          onChange={e => setNewUpcoming({...newUpcoming, fee_amount: e.target.value})} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button 
+                    type="submit" 
+                    className="btn-primary w-full !h-24 text-[11px] font-black uppercase tracking-[0.5em] shadow-[0_30px_70px_rgba(16,185,129,0.3)] mt-12 group !rounded-[2.5rem]"
+                  >
+                    <Save className="w-6 h-6 group-hover:scale-125 transition-transform" /> 
+                    Create Tournament
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          </Portal>
+        )}
+      </AnimatePresence>
+
+      {/* Student Registration Modal */}
+      <AnimatePresence>
+        {isRegisterOpen && selectedUpcoming && (
+          <Portal>
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsRegisterOpen(false)}
+                className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
+                style={{ position: 'fixed' }}
+              />
+              
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                className="glass-card !rounded-[4rem] w-full max-w-2xl relative z-20 border-white/10 !p-12 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto max-h-[90vh] flex flex-col"
+              >
+                <div className="flex items-center justify-between mb-8 shrink-0">
+                  <div>
+                    <h3 className="text-3xl font-black italic uppercase text-white leading-none">Register <span className="text-emerald-500">Students</span></h3>
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-2">Select students to participate</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setIsRegisterOpen(false)}
+                    className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all border border-white/5"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="overflow-y-auto flex-1 divide-y divide-white/[0.03] pr-2 custom-scrollbar">
+                  {unregisteredStudents.map(student => (
+                    <div key={student.id} className="py-4 flex items-center justify-between gap-6 group">
+                      <div>
+                        <h4 className="text-lg font-black text-white group-hover:text-emerald-400 transition-colors uppercase italic">{student.name}</h4>
+                        <div className="flex gap-3 text-[9px] font-bold text-white/30 uppercase tracking-widest mt-1">
+                          <span>{student.belt_level}</span>
+                          <span>•</span>
+                          <span>T-Shirt: {student.tshirt_size || 'None'} ({student.tshirt_status})</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRegisterStudent(student.id)}
+                        className="px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 hover:text-white transition-all shadow-md"
+                      >
+                        Register
+                      </button>
+                    </div>
+                  ))}
+                  {unregisteredStudents.length === 0 && (
+                    <div className="py-12 text-center text-white/20 uppercase tracking-widest text-[9px] font-black">
+                      All students are registered for this event.
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          </Portal>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };

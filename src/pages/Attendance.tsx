@@ -13,13 +13,17 @@ import {
   Award,
   Zap,
   BarChart3,
-  Search
+  Search,
+  DownloadCloud
 } from 'lucide-react';
 import { Student } from '../types';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
+import Portal from '../components/Portal';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -37,6 +41,9 @@ const Attendance: React.FC = () => {
   const [search, setSearch] = useState('');
   const [weeklyTrends, setWeeklyTrends] = useState<any[]>([]);
   const [personalStats, setPersonalStats] = useState<Record<string, number>>({});
+
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const [downloadMode, setDownloadMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   useEffect(() => {
     fetchData();
@@ -162,6 +169,191 @@ const Attendance: React.FC = () => {
     }
   };
 
+  const handleDownloadPDF = async () => {
+    if (downloadMode === 'daily') {
+      generateDailyPDF();
+    } else if (downloadMode === 'weekly') {
+      await generateWeeklyPDF();
+    } else if (downloadMode === 'monthly') {
+      await generateMonthlyPDF();
+    }
+    setIsDownloadOpen(false);
+  };
+
+  const generateDailyPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(16, 185, 129);
+    doc.text("Maha Silambam Academy", 14, 20);
+
+    doc.setFontSize(14);
+    doc.setTextColor(80, 80, 80);
+    doc.text("DAILY ATTENDANCE SHEET", 14, 30);
+    doc.setFontSize(10);
+    doc.text(`Date: ${format(new Date(selectedDate), 'dd MMMM yyyy')}`, 14, 36);
+
+    const headers = [['Student Name', 'Belt Rank', 'Status']];
+    const data = students.map(s => [
+      s.name,
+      s.belt_level,
+      attendance[s.id] === 'present' ? 'Present' : attendance[s.id] === 'absent' ? 'Absent' : 'Not Marked'
+    ]);
+
+    doc.autoTable({
+      head: headers,
+      body: data,
+      startY: 42,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129] }
+    });
+
+    const finalY = (doc as any).lastAutoTable.finalY + 20;
+    doc.setFontSize(10);
+    doc.text("Instructor Signature: _______________________", 14, finalY);
+
+    doc.save(`Daily_Attendance_${selectedDate}.pdf`);
+    toast.success('Daily PDF downloaded successfully.');
+  };
+
+  const generateWeeklyPDF = async () => {
+    const loadToast = toast.loading('Generating weekly attendance report...');
+    try {
+      const currentDate = new Date(selectedDate);
+      const dayOfWeek = currentDate.getDay(); // 0 is Sun, 1 is Mon...
+      const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(currentDate);
+      monday.setDate(currentDate.getDate() + diffToMon);
+      
+      const weekDates = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        return format(d, 'yyyy-MM-dd');
+      });
+
+      // Fetch attendance for these 7 days
+      const { data: logs, error } = await supabase
+        .from('attendance')
+        .select('student_id, date, status')
+        .in('date', weekDates);
+      
+      if (error) throw error;
+
+      const doc = new jsPDF({ orientation: 'landscape' });
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(16, 185, 129);
+      doc.text("Maha Silambam Academy", 14, 20);
+
+      doc.setFontSize(14);
+      doc.setTextColor(80, 80, 80);
+      doc.text("WEEKLY ATTENDANCE SHEET", 14, 30);
+      doc.setFontSize(10);
+      doc.text(`Week: ${format(new Date(weekDates[0]), 'dd MMMM yyyy')} to ${format(new Date(weekDates[6]), 'dd MMMM yyyy')}`, 14, 36);
+
+      const headers = [['Student Name', 'Belt Rank', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Present']];
+      const data = students.map(s => {
+        const row: any[] = [s.name, s.belt_level];
+        let presentCount = 0;
+        weekDates.forEach(date => {
+          const log = logs?.find(l => l.student_id === s.id && l.date === date);
+          if (log) {
+            if (log.status === 'present') {
+              row.push('P');
+              presentCount++;
+            } else {
+              row.push('A');
+            }
+          } else {
+            row.push('-');
+          }
+        });
+        row.push(`${presentCount}/7`);
+        return row;
+      });
+
+      doc.autoTable({
+        head: headers,
+        body: data,
+        startY: 42,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129] }
+      });
+
+      const finalY = (doc as any).lastAutoTable.finalY + 15;
+      doc.setFontSize(10);
+      doc.text("Instructor Signature: _______________________", 14, finalY);
+
+      doc.save(`Weekly_Attendance_${weekDates[0]}.pdf`);
+      toast.success('Weekly PDF downloaded successfully.', { id: loadToast });
+    } catch (err) {
+      toast.error('Failed to generate weekly PDF.', { id: loadToast });
+    }
+  };
+
+  const generateMonthlyPDF = async () => {
+    const loadToast = toast.loading('Generating monthly attendance report...');
+    try {
+      const currentDate = new Date(selectedDate);
+      const start = format(startOfMonth(currentDate), 'yyyy-MM-dd');
+      const end = format(endOfMonth(currentDate), 'yyyy-MM-dd');
+
+      const { data: logs, error } = await supabase
+        .from('attendance')
+        .select('student_id, date, status')
+        .gte('date', start)
+        .lte('date', end);
+      
+      if (error) throw error;
+
+      const doc = new jsPDF();
+      doc.setFont("Helvetica", "bold");
+      doc.setFontSize(22);
+      doc.setTextColor(16, 185, 129);
+      doc.text("Maha Silambam Academy", 14, 20);
+
+      doc.setFontSize(14);
+      doc.setTextColor(80, 80, 80);
+      doc.text("MONTHLY ATTENDANCE SUMMARY", 14, 30);
+      doc.setFontSize(10);
+      doc.text(`Month: ${format(currentDate, 'MMMM yyyy')}`, 14, 36);
+
+      const headers = [['Student Name', 'Belt Rank', 'Present Days', 'Absent Days', 'Total Classes', 'Attendance Rate (%)']];
+      const data = students.map(s => {
+        const studentLogs = logs?.filter(l => l.student_id === s.id) || [];
+        const present = studentLogs.filter(l => l.status === 'present').length;
+        const absent = studentLogs.filter(l => l.status === 'absent').length;
+        const total = present + absent;
+        const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+        return [
+          s.name,
+          s.belt_level,
+          present.toString(),
+          absent.toString(),
+          total.toString(),
+          `${rate}%`
+        ];
+      });
+
+      doc.autoTable({
+        head: headers,
+        body: data,
+        startY: 42,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129] }
+      });
+
+      const finalY = (doc as any).lastAutoTable.finalY + 15;
+      doc.setFontSize(10);
+      doc.text("Instructor Signature: _______________________", 14, finalY);
+
+      doc.save(`Monthly_Attendance_${format(currentDate, 'yyyy_MM')}.pdf`);
+      toast.success('Monthly PDF downloaded successfully.', { id: loadToast });
+    } catch (err) {
+      toast.error('Failed to generate monthly PDF.', { id: loadToast });
+    }
+  };
+
   const currentStats = {
     total: students.length,
     present: Object.values(attendance).filter(v => v === 'present').length,
@@ -219,6 +411,10 @@ const Attendance: React.FC = () => {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-wrap gap-4">
+          <button onClick={() => setIsDownloadOpen(true)} className="btn-secondary !h-16 !px-8 backdrop-blur-xl border-white/5 !bg-white/[0.02]">
+            <DownloadCloud className="w-5 h-5 text-emerald-500" />
+            Download PDF
+          </button>
           <button onClick={() => handleMarkAll('present')} className="btn-secondary !h-16 !px-8 backdrop-blur-xl border-white/5 !bg-white/[0.02]">
             <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             Bulk Present
@@ -389,6 +585,77 @@ const Attendance: React.FC = () => {
            </div>
         </div>
       </div>
+      <AnimatePresence>
+        {isDownloadOpen && (
+          <Portal>
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsDownloadOpen(false)}
+                className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
+                style={{ position: 'fixed' }}
+              />
+              
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0, y: 30 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                className="glass-card !rounded-[4rem] w-full max-w-md relative z-20 border-white/10 !p-12 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto"
+              >
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="text-3xl font-black italic uppercase text-white leading-none">Download <span className="text-emerald-500">Report</span></h3>
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-2">Choose attendance report range</p>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setIsDownloadOpen(false)}
+                    className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all border border-white/5"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[9px] font-black text-white/20 uppercase tracking-widest block ml-1">Report Mode</label>
+                    <div className="flex flex-col gap-2">
+                      {[
+                        { id: 'daily', label: 'Daily (Selected Day)' },
+                        { id: 'weekly', label: 'Weekly Grid (Monday - Sunday)' },
+                        { id: 'monthly', label: 'Monthly Summary (Rate & Counts)' }
+                      ].map(mode => (
+                        <button
+                          key={mode.id}
+                          onClick={() => setDownloadMode(mode.id as any)}
+                          className={cn(
+                            "w-full py-4 px-6 rounded-xl border text-xs font-black uppercase tracking-wider text-left transition-all",
+                            downloadMode === mode.id 
+                              ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20"
+                              : "bg-white/[0.02] border-white/5 text-white/40 hover:text-white"
+                          )}
+                        >
+                          {mode.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={handleDownloadPDF}
+                    className="btn-primary w-full !h-16 text-[10px] font-black uppercase tracking-widest mt-6"
+                  >
+                    <DownloadCloud className="w-5 h-5" />
+                    Download PDF Report
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </Portal>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
