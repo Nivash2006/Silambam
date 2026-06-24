@@ -147,6 +147,7 @@ const Fees: React.FC = () => {
   };
 
   const openEditModal = (studentName: string, payment: FeePayment) => {
+    console.log('openEditModal called for:', studentName, payment);
     setEditingPayment({ studentName, payment });
     setEditForm({
       amount: payment.amount.toString(),
@@ -161,6 +162,7 @@ const Fees: React.FC = () => {
     if (!editingPayment) return;
     const loadToast = toast.loading('Updating payment details...');
     try {
+      console.log('Updating payment ID:', editingPayment.payment.id, 'with form:', editForm);
       const { error } = await supabase
         .from('fees')
         .update({
@@ -176,6 +178,7 @@ const Fees: React.FC = () => {
       setEditingPayment(null);
       fetchData();
     } catch (err) {
+      console.error('Error updating payment:', err);
       toast.error('Failed to update payment details.', { id: loadToast });
     }
   };
@@ -185,6 +188,7 @@ const Fees: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete the payment for ${editingPayment.studentName}? This will set their status back to Pending.`)) return;
     const loadToast = toast.loading('Reverting payment...');
     try {
+      console.log('Deleting payment ID:', editingPayment.payment.id);
       const { error } = await supabase
         .from('fees')
         .delete()
@@ -196,6 +200,7 @@ const Fees: React.FC = () => {
       setEditingPayment(null);
       fetchData();
     } catch (err) {
+      console.error('Error deleting payment:', err);
       toast.error('Failed to revert payment.', { id: loadToast });
     }
   };
@@ -404,7 +409,13 @@ const Fees: React.FC = () => {
                              <div className="flex items-center gap-6">
                                 <div className="flex items-center gap-2">
                                    <Zap className="w-3 h-3 text-emerald-500" />
-                                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest italic tracking-tighter">Fee: ₹{student.fee_amount.toLocaleString()}</p>
+                                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest italic tracking-tighter">
+                                     {status === 'paid' && payment ? (
+                                       <>Paid: ₹{payment.amount.toLocaleString()} ({payment.method})</>
+                                     ) : (
+                                       <>Fee: ₹{student.fee_amount.toLocaleString()}</>
+                                     )}
+                                   </p>
                                 </div>
                              </div>
                           </div>
@@ -468,8 +479,9 @@ const Fees: React.FC = () => {
       {/* Edit Payment Modal */}
       <Portal>
         <AnimatePresence>
-          {isEditModalOpen && editingPayment && (
+          {isEditModalOpen && (
             <motion.div 
+              key="edit-payment-modal"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -489,7 +501,7 @@ const Fees: React.FC = () => {
                 <div className="flex items-center justify-between mb-8 shrink-0">
                   <div>
                     <h3 className="text-3xl font-black italic uppercase text-white leading-none">Edit <span className="text-emerald-500">Payment</span></h3>
-                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-2">{editingPayment.studentName}</p>
+                    <p className="text-[10px] text-white/30 font-black uppercase tracking-[0.3em] mt-2">{editingPayment?.studentName}</p>
                   </div>
                   <button 
                     type="button"
