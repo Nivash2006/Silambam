@@ -25,6 +25,7 @@ import { Student, BeltLevel } from '../types';
 import StudentForm from '../components/StudentForm';
 import PromoteModal from '../components/PromoteModal';
 import Portal from '../components/Portal';
+import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
@@ -62,6 +63,19 @@ const Students: React.FC = () => {
   const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | undefined>(undefined);
   const [promotingStudent, setPromotingStudent] = useState<Student | null>(null);
+
+  // Confirmation modal state
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
 
   // PDF Custom Download States
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
@@ -210,20 +224,26 @@ const Students: React.FC = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this student?')) return;
-    try {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      toast.success('Student deleted successfully');
-      fetchStudents();
-    } catch (error) {
-      toast.error('Failed to delete student');
-    }
+  const handleDelete = async (id: string, name: string) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Student',
+      message: `Are you sure you want to delete ${name}? This action cannot be undone. All attendance, fees, and tournament records for this student will also be deleted.`,
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase
+            .from('students')
+            .delete()
+            .eq('id', id);
+          
+          if (error) throw error;
+          toast.success('Student deleted successfully');
+          fetchStudents();
+        } catch (error) {
+          toast.error('Failed to delete student');
+        }
+      }
+    });
   };
 
   const handleAdd = async (data: Omit<Student, 'id' | 'fee_status' | 'created_at'>) => {
@@ -412,7 +432,7 @@ const Students: React.FC = () => {
                 <div className="absolute top-6 right-6 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-20">
                   <button onClick={() => { setPromotingStudent(student); setIsPromoteModalOpen(true); }} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-amber-400 transition-all flex items-center justify-center backdrop-blur-md"><Award className="w-5 h-5" /></button>
                   <button onClick={() => { setEditingStudent(student); setIsFormOpen(true); }} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-emerald-400 transition-all flex items-center justify-center backdrop-blur-md"><Edit2 className="w-5 h-5" /></button>
-                  <button onClick={() => handleDelete(student.id)} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-rose-400 transition-all flex items-center justify-center backdrop-blur-md"><Trash2 className="w-5 h-5" /></button>
+                  <button onClick={() => handleDelete(student.id, student.name)} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-rose-400 transition-all flex items-center justify-center backdrop-blur-md"><Trash2 className="w-5 h-5" /></button>
                 </div>
               </div>
 
@@ -576,6 +596,18 @@ const Students: React.FC = () => {
           )}
         </AnimatePresence>
       </Portal>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDanger={true}
+        onConfirm={confirmState.onConfirm}
+        onClose={() => setConfirmState(p => ({ ...p, isOpen: false }))}
+      />
     </div>
   );
 };

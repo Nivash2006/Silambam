@@ -31,6 +31,7 @@ import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
 import Portal from '../components/Portal';
+import ConfirmModal from '../components/ConfirmModal';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -53,6 +54,19 @@ const Tournaments: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'achievements' | 'upcoming' | 'tshirts'>('achievements');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // Confirmation state
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
   
   // Past Achievements states
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -256,51 +270,69 @@ const Tournaments: React.FC = () => {
 
   // Delete Achievement Record
   const handleDeleteAchievement = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this achievement record?")) return;
-    try {
-      const { error } = await supabase
-        .from('tournaments')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      toast.success('Achievement deleted successfully.');
-      fetchData();
-    } catch (err) {
-      toast.error('Failed to delete achievement.');
-    }
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Achievement',
+      message: 'Are you sure you want to delete this achievement record? This action cannot be undone.',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase
+            .from('tournaments')
+            .delete()
+            .eq('id', id);
+          if (error) throw error;
+          toast.success('Achievement deleted successfully.');
+          fetchData();
+        } catch (err) {
+          toast.error('Failed to delete achievement.');
+        }
+      }
+    });
   };
 
   // Delete Upcoming Tournament and registrations
   const handleDeleteUpcoming = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this tournament? All student registrations for this event will also be deleted.")) return;
-    const loadToast = toast.loading('Deleting tournament...');
-    try {
-      await supabase.from('tournament_registrations').delete().eq('tournament_id', id);
-      const { error } = await supabase.from('upcoming_tournaments').delete().eq('id', id);
-      if (error) throw error;
-      toast.success('Tournament deleted successfully.', { id: loadToast });
-      setSelectedUpcoming(null);
-      fetchData();
-    } catch (err) {
-      toast.error('Failed to delete tournament.', { id: loadToast });
-    }
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Tournament',
+      message: 'Are you sure you want to delete this tournament? All student registrations for this event will also be deleted.',
+      onConfirm: async () => {
+        const loadToast = toast.loading('Deleting tournament...');
+        try {
+          await supabase.from('tournament_registrations').delete().eq('tournament_id', id);
+          const { error } = await supabase.from('upcoming_tournaments').delete().eq('id', id);
+          if (error) throw error;
+          toast.success('Tournament deleted successfully.', { id: loadToast });
+          setSelectedUpcoming(null);
+          fetchData();
+        } catch (err) {
+          toast.error('Failed to delete tournament.', { id: loadToast });
+        }
+      }
+    });
   };
 
   // Delete Student
-  const handleDeleteStudent = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this student? All attendance, fees, and achievement records for this student will also be deleted.")) return;
-    const loadToast = toast.loading('Deleting student...');
-    try {
-      const { error } = await supabase
-        .from('students')
-        .delete()
-        .eq('id', id);
-      if (error) throw error;
-      toast.success('Student deleted successfully.', { id: loadToast });
-      fetchData();
-    } catch (err) {
-      toast.error('Failed to delete student.', { id: loadToast });
-    }
+  const handleDeleteStudent = async (id: string, name: string) => {
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Student',
+      message: `Are you sure you want to delete ${name}? All attendance, fees, and achievement records for this student will also be deleted.`,
+      onConfirm: async () => {
+        const loadToast = toast.loading('Deleting student...');
+        try {
+          const { error } = await supabase
+            .from('students')
+            .delete()
+            .eq('id', id);
+          if (error) throw error;
+          toast.success('Student deleted successfully.', { id: loadToast });
+          fetchData();
+        } catch (err) {
+          toast.error('Failed to delete student.', { id: loadToast });
+        }
+      }
+    });
   };
 
   // Submit edit for student
@@ -972,7 +1004,7 @@ const Tournaments: React.FC = () => {
                         <Edit2 className="w-4.5 h-4.5" />
                       </button>
                       <button
-                        onClick={() => handleDeleteStudent(student.id)}
+                        onClick={() => handleDeleteStudent(student.id, student.name)}
                         className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0"
                         title="Delete Student"
                       >
@@ -1373,6 +1405,17 @@ const Tournaments: React.FC = () => {
         </AnimatePresence>
       </Portal>
 
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDanger={true}
+        onConfirm={confirmState.onConfirm}
+        onClose={() => setConfirmState(p => ({ ...p, isOpen: false }))}
+      />
     </div>
   );
 };

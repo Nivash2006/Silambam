@@ -27,6 +27,7 @@ import { format, subMonths, startOfDay, endOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import toast from 'react-hot-toast';
 import Portal from '../components/Portal';
+import ConfirmModal from '../components/ConfirmModal';
 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -53,6 +54,21 @@ const Fees: React.FC = () => {
     payment_date: '',
     method: 'cash' as 'cash' | 'online'
   });
+
+  // Confirmation state
+  const [confirmState, setConfirmState] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
+
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -185,43 +201,55 @@ const Fees: React.FC = () => {
 
   const handleDeletePayment = async () => {
     if (!editingPayment) return;
-    if (!window.confirm(`Are you sure you want to delete the payment for ${editingPayment.studentName}? This will set their status back to Pending.`)) return;
-    const loadToast = toast.loading('Reverting payment...');
-    try {
-      console.log('Deleting payment ID:', editingPayment.payment.id);
-      const { error } = await supabase
-        .from('fees')
-        .delete()
-        .eq('id', editingPayment.payment.id);
-      
-      if (error) throw error;
-      toast.success('Payment reverted successfully.', { id: loadToast });
-      setIsEditModalOpen(false);
-      setEditingPayment(null);
-      fetchData();
-    } catch (err) {
-      console.error('Error deleting payment:', err);
-      toast.error('Failed to revert payment.', { id: loadToast });
-    }
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Payment',
+      message: `Are you sure you want to delete the payment for ${editingPayment.studentName}? This will set their status back to Pending.`,
+      onConfirm: async () => {
+        const loadToast = toast.loading('Reverting payment...');
+        try {
+          console.log('Deleting payment ID:', editingPayment.payment.id);
+          const { error } = await supabase
+            .from('fees')
+            .delete()
+            .eq('id', editingPayment.payment.id);
+          
+          if (error) throw error;
+          toast.success('Payment reverted successfully.', { id: loadToast });
+          setIsEditModalOpen(false);
+          setEditingPayment(null);
+          fetchData();
+        } catch (err) {
+          console.error('Error deleting payment:', err);
+          toast.error('Failed to revert payment.', { id: loadToast });
+        }
+      }
+    });
   };
 
   const deletePaymentDirect = async (studentName: string, payment: FeePayment) => {
-    if (!window.confirm(`Are you sure you want to delete the payment for ${studentName}? This will set their status back to Pending.`)) return;
-    const loadToast = toast.loading('Reverting payment...');
-    try {
-      console.log('Deleting payment ID:', payment.id);
-      const { error } = await supabase
-        .from('fees')
-        .delete()
-        .eq('id', payment.id);
-      
-      if (error) throw error;
-      toast.success('Payment reverted successfully.', { id: loadToast });
-      fetchData();
-    } catch (err) {
-      console.error('Error deleting payment:', err);
-      toast.error('Failed to revert payment.', { id: loadToast });
-    }
+    setConfirmState({
+      isOpen: true,
+      title: 'Delete Payment',
+      message: `Are you sure you want to delete the payment for ${studentName}? This will set their status back to Pending.`,
+      onConfirm: async () => {
+        const loadToast = toast.loading('Reverting payment...');
+        try {
+          console.log('Deleting payment ID:', payment.id);
+          const { error } = await supabase
+            .from('fees')
+            .delete()
+            .eq('id', payment.id);
+          
+          if (error) throw error;
+          toast.success('Payment reverted successfully.', { id: loadToast });
+          fetchData();
+        } catch (err) {
+          console.error('Error deleting payment:', err);
+          toast.error('Failed to revert payment.', { id: loadToast });
+        }
+      }
+    });
   };
 
   if (loading) {
@@ -281,21 +309,24 @@ const Fees: React.FC = () => {
             value: `₹${collected.toLocaleString()}`, 
             icon: IndianRupee, 
             color: 'text-emerald-400', 
-            bg: 'bg-emerald-500/10'
+            bg: 'bg-emerald-500/10',
+            glow: 'hover:border-emerald-500/30 hover:shadow-[0_0_50px_rgba(16,185,129,0.08)]'
           },
           { 
             label: 'Outstanding Dues', 
             value: `₹${pending.toLocaleString()}`, 
             icon: AlertCircle, 
             color: 'text-rose-500', 
-            bg: 'bg-rose-500/10'
+            bg: 'bg-rose-500/10',
+            glow: 'hover:border-rose-500/30 hover:shadow-[0_0_50px_rgba(244,63,94,0.08)]'
           },
           { 
             label: 'Collection Rate', 
             value: `${rate}%`, 
             icon: History, 
             color: 'text-sky-400', 
-            bg: 'bg-sky-500/10'
+            bg: 'bg-sky-500/10',
+            glow: 'hover:border-sky-500/30 hover:shadow-[0_0_50px_rgba(14,165,233,0.08)]'
           }
         ].map((stat, idx) => (
           <motion.div 
@@ -303,7 +334,10 @@ const Fees: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={idx} 
-            className="glass-card !p-8 !rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:scale-[1.02] transition-all duration-500"
+            className={cn(
+              "glass-card !p-8 !rounded-[2.5rem] border-white/5 relative overflow-hidden group hover:scale-[1.02] transition-all duration-500",
+              stat.glow
+            )}
           >
             <div className={cn("absolute -right-4 -top-4 w-24 h-24 rounded-full blur-3xl opacity-10 group-hover:opacity-20 transition-opacity", stat.bg)} />
             <div className="flex items-center justify-between mb-6">
@@ -378,14 +412,19 @@ const Fees: React.FC = () => {
 
         {/* Right Ledger List */}
         <div className="lg:col-span-8 space-y-8">
-           <div className="glass-card !p-6 !rounded-[2.5rem] flex items-center gap-6 border-white/5 bg-white/[0.01]">
-              <Search className="w-5 h-5 text-white/10" />
+           <div className={cn(
+             "glass-card !p-6 !rounded-[2.5rem] flex items-center gap-6 border-white/5 bg-white/[0.01] transition-all duration-300",
+             isSearchFocused && "border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.05)] bg-white/[0.02]"
+           )}>
+              <Search className={cn("w-5 h-5 transition-colors", isSearchFocused ? "text-emerald-500" : "text-white/10")} />
               <input 
                 type="text" 
                 placeholder="Search student by name..."
                 className="bg-transparent flex-1 font-bold text-white placeholder:text-white/10 focus:outline-none"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
               />
            </div>
 
@@ -401,7 +440,7 @@ const Fees: React.FC = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: idx * 0.03 }}
                       key={student.id}
-                      className="glass-card group flex flex-col md:flex-row md:items-center gap-4 sm:gap-8 py-4 sm:py-6 px-5 sm:px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-[2.5rem]"
+                      className="glass-card group flex flex-col md:flex-row md:items-center gap-4 sm:gap-8 py-4 sm:py-6 px-5 sm:px-10 border-white/5 hover:border-emerald-500/20 hover:shadow-[0_0_30px_rgba(16,185,129,0.02)] hover:bg-white/[0.015] transition-all !rounded-[2rem] sm:!rounded-[2.5rem]"
                     >
                        <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
                           <div className="relative shrink-0">
@@ -447,8 +486,9 @@ const Fees: React.FC = () => {
                                  key="paid-pill"
                                  initial={{ opacity: 0, scale: 0.9 }}
                                  animate={{ opacity: 1, scale: 1 }}
-                                 className="px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(16,185,129,0.1)]"
+                                 className="px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(16,185,129,0.1)] flex items-center gap-1.5"
                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                                   Paid
                                </motion.div>
                              ) : (
@@ -456,23 +496,24 @@ const Fees: React.FC = () => {
                                  key="pending-pill"
                                  initial={{ opacity: 0, scale: 0.9 }}
                                  animate={{ opacity: 1, scale: 1 }}
-                                 className="px-6 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[9px] font-black uppercase tracking-[0.2em]"
+                                 className="px-6 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5"
                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
                                   Pending
                                </motion.div>
                              )}
                           </AnimatePresence>
 
                           <div className="flex items-center gap-3">
-                             {status === 'pending' ? (
-                               <button 
-                                 onClick={() => markAsPaid(student)}
-                                 className="btn-primary !h-12 !px-8 text-[9px] font-black uppercase shadow-lg shadow-emerald-500/20"
-                               >
-                                  <DollarSign className="w-3.5 h-3.5" />
-                                  Pay
-                               </button>
-                             ) : (
+                              {status === 'pending' ? (
+                                <button 
+                                  onClick={() => markAsPaid(student)}
+                                  className="btn-primary !h-12 !px-8 text-[9px] font-black uppercase shadow-lg shadow-emerald-500/20"
+                                >
+                                   <DollarSign className="w-3.5 h-3.5" />
+                                   Pay
+                                </button>
+                              ) : (
                                 <div className="flex items-center gap-2">
                                   <button 
                                     onClick={() => {
@@ -483,7 +524,7 @@ const Fees: React.FC = () => {
                                     className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center"
                                     title="Edit Payment"
                                   >
-                                    <Edit2 className="w-5 h-5" />
+                                    <Edit2 className="w-5 h-5 pointer-events-none" />
                                   </button>
                                   <button 
                                     onClick={() => {
@@ -494,11 +535,11 @@ const Fees: React.FC = () => {
                                     className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center"
                                     title="Delete Payment"
                                   >
-                                    <Trash2 className="w-5 h-5" />
+                                    <Trash2 className="w-5 h-5 pointer-events-none" />
                                   </button>
                                 </div>
-                             )}
-                          </div>
+                              )}
+                           </div>
                        </div>
                     </motion.div>
                   );
@@ -608,6 +649,18 @@ const Fees: React.FC = () => {
           )}
         </AnimatePresence>
       </Portal>
+
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmState.isOpen}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmLabel="Revert to Pending"
+        cancelLabel="Keep Paid"
+        isDanger={true}
+        onConfirm={confirmState.onConfirm}
+        onClose={() => setConfirmState(p => ({ ...p, isOpen: false }))}
+      />
     </div>
   );
 };
