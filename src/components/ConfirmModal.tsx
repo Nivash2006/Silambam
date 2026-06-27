@@ -36,14 +36,14 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           >
             <div
               onClick={onClose}
-              className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl"
+              className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl z-0 cursor-pointer"
             />
             
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="glass-card !rounded-[3rem] w-full max-w-md relative z-20 border-white/10 p-10 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto flex flex-col gap-6"
+              className="glass-card !rounded-[3rem] w-full max-w-md relative z-10 border-white/10 p-10 overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.5)] my-auto flex flex-col gap-6 pointer-events-auto"
             >
               <div className="flex items-start gap-4">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border ${
@@ -61,11 +61,11 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex gap-4 mt-2">
+              <div className="flex gap-4 mt-2 relative z-20">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="flex-1 bg-white/[0.02] hover:bg-white/5 border border-white/5 text-white/60 hover:text-white font-black italic uppercase tracking-wider h-14 rounded-xl transition-all cursor-pointer"
+                  className="flex-1 bg-white/[0.02] hover:bg-white/5 border border-white/5 text-white/60 hover:text-white font-black italic uppercase tracking-wider h-14 rounded-xl transition-all cursor-pointer pointer-events-auto"
                 >
                   {cancelLabel}
                 </button>
@@ -75,7 +75,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
                     onConfirm();
                     onClose();
                   }}
-                  className={`flex-1 font-black italic uppercase tracking-wider h-14 rounded-xl transition-all cursor-pointer flex items-center justify-center ${
+                  className={`flex-1 font-black italic uppercase tracking-wider h-14 rounded-xl transition-all cursor-pointer pointer-events-auto flex items-center justify-center ${
                     isDanger 
                       ? 'bg-rose-500 hover:bg-rose-400 text-white shadow-[0_0_20px_rgba(244,63,94,0.2)]' 
                       : 'bg-emerald-500 hover:bg-emerald-400 text-[#05070a] shadow-[0_0_20px_rgba(16,185,129,0.2)]'

@@ -268,6 +268,17 @@ const Tournaments: React.FC = () => {
     }
   };
 
+  const handleToggleTshirt = async (studentId: string, currentStatus: string | null | undefined, currentSize: string | null | undefined) => {
+    const isWants = currentStatus && currentStatus !== 'None';
+    const newStatus = isWants ? 'None' : 'Wants';
+    const newSize = isWants ? 'None' : (currentSize && currentSize !== 'None' ? currentSize : '26');
+    
+    await handleUpdateTshirt(studentId, {
+      tshirt_status: newStatus as any,
+      tshirt_size: newSize
+    });
+  };
+
   // Delete Achievement Record
   const handleDeleteAchievement = async (id: string) => {
     setConfirmState({
@@ -956,40 +967,75 @@ const Tournaments: React.FC = () => {
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 sm:gap-6 w-full md:w-auto">
-                    {/* Size Select Dropdown */}
-                    <div className="space-y-1 w-full sm:w-36 shrink-0">
-                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Size</label>
-                      <div className="relative">
-                        <select
-                          value={student.tshirt_size || 'None'}
-                          onChange={(e) => handleUpdateTshirt(student.id, { tshirt_size: e.target.value })}
-                          className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
-                        >
-                          <option value="None" className="bg-[#0f172a] text-white">None</option>
-                          {['22', '24', '26', '28', '30', '32', '34', '36', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
-                            <option key={sz} value={sz} className="bg-[#0f172a] text-white">Size {sz}</option>
-                          ))}
-                        </select>
-                      </div>
+                    {/* Wants T-Shirt Toggle Switch */}
+                    <div className="flex flex-col gap-1 shrink-0 items-start">
+                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Wants T-Shirt</label>
+                      <button
+                        onClick={() => handleToggleTshirt(student.id, student.tshirt_status, student.tshirt_size)}
+                        className={cn(
+                          "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                          (student.tshirt_status && student.tshirt_status !== 'None')
+                            ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+                            : "bg-white/[0.02] border-white/5"
+                        )}
+                        title={(student.tshirt_status && student.tshirt_status !== 'None') ? "Turn off (No T-Shirt)" : "Turn on (Needs T-Shirt)"}
+                      >
+                        <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.tshirt_status && student.tshirt_status !== 'None') ? 1 : 0 }}>
+                          ON
+                        </span>
+                        <span className="absolute right-2 text-[8px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.tshirt_status && student.tshirt_status !== 'None') ? 0 : 1 }}>
+                          OFF
+                        </span>
+                        <div
+                          className={cn(
+                            "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                            (student.tshirt_status && student.tshirt_status !== 'None')
+                              ? "bg-[#05070a] translate-x-7" 
+                              : "bg-white/10 translate-x-0"
+                          )}
+                        />
+                      </button>
                     </div>
 
-                    {/* Status Select Dropdown */}
-                    <div className="space-y-1 w-full sm:w-44 shrink-0">
-                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Status</label>
-                      <div className="relative">
-                        <select
-                          value={student.tshirt_status || 'None'}
-                          onChange={(e) => handleUpdateTshirt(student.id, { tshirt_status: e.target.value as any })}
-                          className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
-                        >
-                          <option value="None" className="bg-[#0f172a] text-white">None</option>
-                          <option value="Wants" className="bg-[#0f172a] text-white">Wants T-Shirt</option>
-                          <option value="Already Has" className="bg-[#0f172a] text-white">Already Has</option>
-                          <option value="Bought (Paid)" className="bg-[#0f172a] text-white">Bought (Paid)</option>
-                          <option value="Bought (Unpaid)" className="bg-[#0f172a] text-white">Bought (Unpaid)</option>
-                        </select>
-                      </div>
-                    </div>
+                    {/* Show size and status options only if toggle is ON */}
+                    {student.tshirt_status && student.tshirt_status !== 'None' && (
+                      <>
+                        {/* Size Select Dropdown */}
+                        <div className="space-y-1 w-full sm:w-36 shrink-0">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Size</label>
+                          <div className="relative">
+                            <select
+                              value={student.tshirt_size || 'None'}
+                              onChange={(e) => handleUpdateTshirt(student.id, { tshirt_size: e.target.value })}
+                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                            >
+                              <option value="None" className="bg-[#0f172a] text-white">None</option>
+                              {['22', '24', '26', '28', '30', '32', '34', '36', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
+                                <option key={sz} value={sz} className="bg-[#0f172a] text-white">Size {sz}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Status Select Dropdown */}
+                        <div className="space-y-1 w-full sm:w-44 shrink-0">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Status</label>
+                          <div className="relative">
+                            <select
+                              value={student.tshirt_status || 'None'}
+                              onChange={(e) => handleUpdateTshirt(student.id, { tshirt_status: e.target.value as any })}
+                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                            >
+                              <option value="None" className="bg-[#0f172a] text-white">None</option>
+                              <option value="Wants" className="bg-[#0f172a] text-white">Wants T-Shirt</option>
+                              <option value="Already Has" className="bg-[#0f172a] text-white">Already Has</option>
+                              <option value="Bought (Paid)" className="bg-[#0f172a] text-white">Bought (Paid)</option>
+                              <option value="Bought (Unpaid)" className="bg-[#0f172a] text-white">Bought (Unpaid)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 justify-end w-full sm:w-auto mt-2 sm:mt-0">
