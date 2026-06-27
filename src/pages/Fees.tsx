@@ -429,123 +429,108 @@ const Fees: React.FC = () => {
            </div>
 
            <div className="grid grid-cols-1 gap-4">
-              <AnimatePresence mode="popLayout">
-                {filteredStudents.map((student, idx) => {
-                  const status = getStudentStatus(student.id);
-                  const payment = payments.find(p => p.student_id === student.id);
-                  return (
-                    <motion.div 
-                      layout
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: idx * 0.03 }}
-                      key={student.id}
-                      className="glass-card group flex flex-col md:flex-row md:items-center gap-4 sm:gap-8 py-4 sm:py-6 px-5 sm:px-10 border-white/5 hover:border-emerald-500/20 hover:shadow-[0_0_30px_rgba(16,185,129,0.02)] hover:bg-white/[0.015] transition-all !rounded-[2rem] sm:!rounded-[2.5rem]"
-                    >
-                       <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
-                          <div className="relative shrink-0">
-                             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1rem] sm:rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
-                                {student.photo_url ? (
-                                  <img src={student.photo_url} className="w-full h-full object-cover" alt="" />
-                                ) : (
-                                  <span className="text-xl font-black text-white/10 uppercase">{student.name.charAt(0)}</span>
-                                )}
-                             </div>
-                             <div className={cn(
-                               "absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-[#0B0F0C] z-10 flex items-center justify-center",
-                               status === 'paid' ? "bg-emerald-500" : "bg-rose-500"
-                             )}>
-                                {status === 'paid' ? <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" /> : <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />}
-                             </div>
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mb-1.5 sm:mb-2">
-                                <h4 className="text-lg sm:text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
-                                <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] self-start sm:self-auto">{student.belt_level}</span>
-                             </div>
-                             <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-2">
-                                   <Zap className="w-3 h-3 text-emerald-500" />
-                                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest italic tracking-tighter">
-                                     {status === 'paid' && payment ? (
-                                       <>Paid: ₹{payment.amount.toLocaleString()} ({payment.method})</>
-                                     ) : (
-                                       <>Fee: ₹{student.fee_amount.toLocaleString()}</>
-                                     )}
-                                   </p>
-                                </div>
-                             </div>
-                          </div>
-                       </div>
-
-                       <div className="flex items-center gap-3 sm:gap-6 justify-between md:justify-end w-full md:w-auto">
-                          <AnimatePresence mode="wait">
-                             {status === 'paid' ? (
-                               <motion.div 
-                                 key="paid-pill"
-                                 initial={{ opacity: 0, scale: 0.9 }}
-                                 animate={{ opacity: 1, scale: 1 }}
-                                 className="px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-black uppercase tracking-[0.2em] shadow-[0_0_30px_rgba(16,185,129,0.1)] flex items-center gap-1.5"
-                               >
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                                  Paid
-                               </motion.div>
-                             ) : (
-                               <motion.div 
-                                 key="pending-pill"
-                                 initial={{ opacity: 0, scale: 0.9 }}
-                                 animate={{ opacity: 1, scale: 1 }}
-                                 className="px-6 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 text-[9px] font-black uppercase tracking-[0.2em] flex items-center gap-1.5"
-                               >
-                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
-                                  Pending
-                               </motion.div>
-                             )}
-                          </AnimatePresence>
-
-                          <div className="flex items-center gap-3">
-                              {status === 'pending' ? (
-                                <button 
-                                  onClick={() => markAsPaid(student)}
-                                  className="btn-primary !h-12 !px-8 text-[9px] font-black uppercase shadow-lg shadow-emerald-500/20"
-                                >
-                                   <DollarSign className="w-3.5 h-3.5" />
-                                   Pay
-                                </button>
+              {filteredStudents.map((student) => {
+                const status = getStudentStatus(student.id);
+                const payment = payments.find(p => p.student_id === student.id);
+                return (
+                  <div 
+                    key={student.id}
+                    className="glass-card group flex flex-col md:flex-row md:items-center gap-4 sm:gap-8 py-4 sm:py-6 px-5 sm:px-10 border-white/5 hover:border-emerald-500/20 hover:shadow-[0_0_30px_rgba(16,185,129,0.02)] hover:bg-white/[0.015] transition-all !rounded-[2rem] sm:!rounded-[2.5rem]"
+                  >
+                     <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
+                        <div className="relative shrink-0">
+                           <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1rem] sm:rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
+                              {student.photo_url ? (
+                                <img src={student.photo_url} className="w-full h-full object-cover" alt="" />
                               ) : (
-                                <div className="flex items-center gap-2">
-                                  <button 
-                                    onClick={() => {
-                                      if (payment) {
-                                        openEditModal(student.name, payment);
-                                      }
-                                    }}
-                                    className="w-12 h-12 rounded-xl bg-white/[0.02] border border-white/5 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center"
-                                    title="Edit Payment"
-                                  >
-                                    <Edit2 className="w-5 h-5 pointer-events-none" />
-                                  </button>
-                                  <button 
-                                    onClick={() => {
-                                      if (payment) {
-                                        deletePaymentDirect(student.name, payment);
-                                      }
-                                    }}
-                                    className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500 hover:text-white transition-all flex items-center justify-center"
-                                    title="Delete Payment"
-                                  >
-                                    <Trash2 className="w-5 h-5 pointer-events-none" />
-                                  </button>
-                                </div>
+                                <span className="text-xl font-black text-white/10 uppercase">{student.name.charAt(0)}</span>
                               )}
                            </div>
-                       </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-           </div>
+                           <div className={cn(
+                             "absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-[#0B0F0C] z-10 flex items-center justify-center",
+                             status === 'paid' ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
+                           )}>
+                              {status === 'paid' ? <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" /> : <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" />}
+                           </div>
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mb-1.5 sm:mb-2">
+                              <h4 className="text-lg sm:text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
+                              <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] self-start sm:self-auto">{student.belt_level}</span>
+                           </div>
+                           <div className="flex items-center gap-6">
+                              <div className="flex items-center gap-2">
+                                 <Zap className="w-3 h-3 text-emerald-500" />
+                                 <p className="text-[10px] font-black text-white/30 uppercase tracking-widest italic tracking-tighter">
+                                   {status === 'paid' && payment ? (
+                                     <>Paid: ₹{payment.amount.toLocaleString()} ({payment.method})</>
+                                   ) : (
+                                     <>Fee: ₹{student.fee_amount.toLocaleString()}</>
+                                   )}
+                                 </p>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="flex items-center gap-4 justify-between md:justify-end w-full md:w-auto">
+                        <div className="flex items-center gap-3">
+                           {/* Toggle Switch (Turn on if paid, turn off if unpaid) */}
+                           <button
+                             onClick={() => {
+                               if (status === 'paid') {
+                                 if (payment) {
+                                   deletePaymentDirect(student.name, payment);
+                                 }
+                               } else {
+                                 markAsPaid(student);
+                               }
+                             }}
+                             className={cn(
+                               "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                               status === 'paid' 
+                                 ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+                                 : "bg-white/[0.02] border-white/5"
+                             )}
+                             title={status === 'paid' ? "Turn off (Unpaid)" : "Turn on (Paid)"}
+                           >
+                             <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: status === 'paid' ? 1 : 0 }}>
+                               ON
+                             </span>
+                             <span className="absolute right-2 text-[8px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: status === 'paid' ? 0 : 1 }}>
+                               OFF
+                             </span>
+                             <div
+                               className={cn(
+                                 "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                                 status === 'paid' 
+                                   ? "bg-[#05070a] translate-x-7" 
+                                   : "bg-white/10 translate-x-0"
+                               )}
+                             />
+                           </button>
+
+                           {/* Edit Button (only visible if paid) */}
+                           {status === 'paid' && (
+                             <button 
+                               onClick={() => {
+                                 if (payment) {
+                                   openEditModal(student.name, payment);
+                                 }
+                               }}
+                               className="w-9 h-9 rounded-xl bg-white/[0.02] border border-white/5 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center cursor-pointer shrink-0"
+                               title="Edit Payment Details"
+                             >
+                               <Edit2 className="w-4 h-4 pointer-events-none" />
+                             </button>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+                );
+              })}
+            </div>
         </div>
       </div>
 
