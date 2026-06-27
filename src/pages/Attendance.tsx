@@ -592,85 +592,84 @@ const Attendance: React.FC = () => {
               />
            </div>
 
-           <div className="grid grid-cols-1 gap-5">
-              <AnimatePresence mode="popLayout">
-                {filteredStudents.map((student, idx) => {
-                  const status = attendance[student.id];
-                  const pRate = personalStats[student.id] || 0;
-                  return (
-                    <motion.div 
-                      layout
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5, delay: idx * 0.03 }}
-                      key={student.id}
-                      onClick={() => setAttendance(p => ({ ...p, [student.id]: p[student.id] === 'present' ? null : 'present' }))}
-                      className="glass-card group flex items-center justify-between gap-4 sm:gap-8 py-4 sm:py-6 px-4 sm:px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2.5rem] cursor-pointer"
-                    >
-                       <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
-                          <div className="relative shrink-0">
-                             <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1rem] sm:rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
-                                {student.photo_url ? (
-                                  <img src={student.photo_url} className="w-full h-full object-cover" alt="" />
-                                ) : (
-                                  <span className="text-lg sm:text-xl font-black text-white/10 uppercase">{student.name.charAt(0)}</span>
-                                )}
-                             </div>
-                             <div className={cn(
-                               "absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-[#0B0F0C] z-10",
-                               status === 'present' ? "bg-emerald-500" : status === 'absent' ? "bg-rose-500" : "bg-white/10"
-                             )} />
-                          </div>
+            <div className="grid grid-cols-1 gap-5">
+              {filteredStudents.map((student) => {
+                const status = attendance[student.id];
+                const pRate = personalStats[student.id] || 0;
+                return (
+                  <div 
+                    key={student.id}
+                    className="glass-card group flex items-center justify-between gap-4 sm:gap-8 py-4 sm:py-6 px-4 sm:px-10 border-white/5 hover:border-emerald-500/20 transition-all !rounded-[2.5rem]"
+                  >
+                     <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
+                        <div className="relative shrink-0">
+                           <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-[1rem] sm:rounded-[1.2rem] bg-white/[0.02] border border-white/10 flex items-center justify-center overflow-hidden">
+                              {student.photo_url ? (
+                                <img src={student.photo_url} className="w-full h-full object-cover" alt="" />
+                              ) : (
+                                <span className="text-lg sm:text-xl font-black text-white/10 uppercase">{student.name.charAt(0)}</span>
+                              )}
+                           </div>
+                           <div className={cn(
+                             "absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 rounded-full border-2 border-[#0B0F0C] z-10 flex items-center justify-center",
+                             status === 'present' ? "bg-emerald-500 animate-pulse" : status === 'absent' ? "bg-rose-500" : "bg-white/10"
+                           )}>
+                             {status === 'present' && <Check className="w-3 h-3 text-[#05070a] stroke-[3]" />}
+                             {status === 'absent' && <X className="w-3 h-3 text-white stroke-[3]" />}
+                           </div>
+                        </div>
 
-                          <div className="flex-1 min-w-0">
-                             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mb-1.5">
-                                <h4 className="text-lg sm:text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
-                                <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] self-start sm:self-auto">{student.belt_level}</span>
-                             </div>
-                             <div className="flex items-center gap-6">
-                                <div className="flex items-center gap-2">
-                                   <Zap className="w-3 h-3 text-emerald-500" />
-                                   <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{pRate}% Consistency</p>
-                                </div>
-                             </div>
-                          </div>
-                       </div>
+                        <div className="flex-1 min-w-0">
+                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mb-1.5">
+                              <h4 className="text-lg sm:text-xl font-black text-white group-hover:text-emerald-400 italic transition-colors uppercase tracking-tight truncate leading-none">{student.name}</h4>
+                              <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em] self-start sm:self-auto">{student.belt_level}</span>
+                           </div>
+                           <div className="flex items-center gap-6">
+                              <div className="flex items-center gap-2">
+                                 <Zap className="w-3 h-3 text-emerald-500" />
+                                 <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{pRate}% Consistency</p>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
 
-                       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                               e.stopPropagation();
-                               setAttendance(p => ({ ...p, [student.id]: p[student.id] === 'present' ? null : 'present' }));
-                            }}
+                     <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        {/* Attendance Toggle Switch */}
+                        <button
+                          onClick={() => {
+                            setAttendance(p => ({
+                              ...p,
+                              [student.id]: p[student.id] === 'present' ? 'absent' : 'present'
+                            }));
+                          }}
+                          className={cn(
+                            "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                            status === 'present' 
+                              ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)] justify-end" 
+                              : "bg-[#05070a] border-white/5 justify-start"
+                          )}
+                          title={status === 'present' ? "Mark Absent" : "Mark Present"}
+                        >
+                          <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: status === 'present' ? 1 : 0 }}>
+                            IN
+                          </span>
+                          <span className="absolute right-2 text-[8px] font-black text-rose-500 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: status === 'present' ? 0 : 1 }}>
+                            OUT
+                          </span>
+                          <div
                             className={cn(
-                              "w-10 h-10 sm:w-12 sm:h-12 rounded-xl transition-all flex items-center justify-center border shrink-0",
-                              status === 'present' ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20" : "bg-white/[0.02] border-white/5 text-white/20 hover:text-emerald-400 hover:border-emerald-500/20"
+                              "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                              status === 'present' 
+                                ? "bg-[#05070a]" 
+                                : "bg-rose-500"
                             )}
-                            title="Mark Present"
-                          >
-                             <Check className="w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
-                          </button>
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                               e.stopPropagation();
-                               setAttendance(p => ({ ...p, [student.id]: p[student.id] === 'absent' ? null : 'absent' }));
-                            }}
-                            className={cn(
-                              "w-10 h-10 sm:w-12 sm:h-12 rounded-xl transition-all flex items-center justify-center border shrink-0",
-                              status === 'absent' ? "bg-rose-500 border-transparent text-white shadow-lg shadow-rose-500/20" : "bg-white/[0.02] border-white/5 text-white/20 hover:text-rose-400 hover:border-rose-500/20"
-                            )}
-                            title="Mark Absent"
-                          >
-                             <X className="w-4 h-4 sm:w-5 sm:h-5 pointer-events-none" />
-                          </button>
-                       </div>
-                    </motion.div>
-                  )
-                })}
-              </AnimatePresence>
-           </div>
+                          />
+                        </button>
+                     </div>
+                  </div>
+                );
+              })}
+            </div>
         </div>
       </div>
       <Portal>
