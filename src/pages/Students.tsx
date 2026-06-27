@@ -550,7 +550,7 @@ const Students: React.FC = () => {
             >
               <div 
                 onClick={() => setIsDownloadModalOpen(false)}
-                className="absolute inset-0 bg-[#05070a]/95 backdrop-blur-3xl" 
+                className="absolute inset-0 bg-[#05070a]/90 backdrop-blur-sm" 
               />
               
               <motion.div 
