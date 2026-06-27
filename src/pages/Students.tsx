@@ -19,7 +19,8 @@ import {
   Zap,
   AlertTriangle,
   DownloadCloud,
-  X
+  X,
+  Check
 } from 'lucide-react';
 import { Student, BeltLevel } from '../types';
 import StudentForm from '../components/StudentForm';
@@ -574,20 +575,34 @@ const Students: React.FC = () => {
 
                 <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar space-y-6">
                   <div className="grid grid-cols-2 gap-4">
-                    {columnOptions.map((col) => (
-                      <label 
-                        key={col.key} 
-                        className="flex items-center gap-3 bg-white/[0.01] hover:bg-white/[0.03] border border-white/5 p-4 rounded-2xl cursor-pointer transition-all select-none"
-                      >
-                        <input 
-                          type="checkbox"
-                          checked={selectedColumns[col.key]}
-                          onChange={(e) => setSelectedColumns(p => ({ ...p, [col.key]: e.target.checked }))}
-                          className="w-5 h-5 rounded border-white/10 bg-black/40 text-emerald-500 focus:ring-emerald-500/20 focus:ring-offset-0"
-                        />
-                        <span className="text-sm font-bold text-white/80">{col.label}</span>
-                      </label>
-                    ))}
+                    {columnOptions.map((col) => {
+                      const isChecked = selectedColumns[col.key];
+                      return (
+                        <button
+                          key={col.key}
+                          type="button"
+                          onClick={() => {
+                            setSelectedColumns(p => ({ ...p, [col.key]: !p[col.key] }));
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 border p-4 rounded-2xl cursor-pointer transition-all duration-300 text-left w-full select-none pointer-events-auto",
+                            isChecked 
+                              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.05)]" 
+                              : "bg-white/[0.01] hover:bg-white/[0.03] border-white/5 text-white/50 hover:text-white"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-300 shrink-0",
+                            isChecked 
+                              ? "bg-emerald-500 border-transparent text-[#05070a]" 
+                              : "border-white/20 bg-black/40"
+                          )}>
+                            {isChecked && <Check className="w-3.5 h-3.5 stroke-[3] pointer-events-none" />}
+                          </div>
+                          <span className="text-xs font-bold uppercase tracking-wider">{col.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
 
                   <button
