@@ -407,22 +407,30 @@ const Fees: React.FC = () => {
                  />
               </div>
 
-              {/* Status Filters (Pills) */}
-              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
-                 {(['all', 'paid', 'pending'] as const).map((f) => (
-                   <button
-                     key={f}
-                     onClick={() => setFilter(f)}
-                     className={cn(
-                       "px-6 py-3 rounded-xl text-[10px] font-black border uppercase tracking-[0.2em] transition-all whitespace-nowrap cursor-pointer pointer-events-auto",
-                       filter === f 
-                         ? "bg-emerald-500 border-transparent text-[#05070a] shadow-lg shadow-emerald-500/20" 
-                         : "bg-white/[0.02] border-white/5 text-white/30 hover:text-white hover:bg-white/5"
-                     )}
-                   >
-                     {f === 'all' ? 'All' : f}
-                   </button>
-                 ))}
+              {/* Status Filters (Sliding Segmented Control) */}
+              <div className="flex bg-black/40 border border-white/5 rounded-2xl p-1 relative shrink-0 overflow-x-auto no-scrollbar">
+                 {(['all', 'paid', 'pending'] as const).map((f) => {
+                   const isActive = filter === f;
+                   return (
+                     <button
+                       key={f}
+                       onClick={() => setFilter(f)}
+                       className={cn(
+                         "relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-colors duration-300 z-10 whitespace-nowrap cursor-pointer select-none pointer-events-auto",
+                         isActive ? "text-[#05070a]" : "text-white/40 hover:text-white"
+                       )}
+                     >
+                       {isActive && (
+                         <motion.div
+                           layoutId="activeFilterBg"
+                           className="absolute inset-0 bg-emerald-500 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] z-[-1]"
+                           transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                         />
+                       )}
+                       {f === 'all' ? 'All' : f}
+                     </button>
+                   );
+                 })}
               </div>
            </div>
 
