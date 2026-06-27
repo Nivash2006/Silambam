@@ -358,20 +358,31 @@ const Students: React.FC = () => {
               />
             </div>
             
-            <div className="flex flex-wrap items-center gap-4 px-4 lg:border-l border-white/5">
-              <div className="flex items-center gap-3 bg-white/[0.03] p-1.5 rounded-2xl border border-white/5">
-                <button 
-                  onClick={() => setSortBy('name')}
-                  className={cn("px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", sortBy === 'name' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-white/30 hover:text-white")}
-                >Name</button>
-                <button 
-                  onClick={() => setSortBy('date')}
-                  className={cn("px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", sortBy === 'date' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-white/30 hover:text-white")}
-                >Join Date</button>
-                <button 
-                  onClick={() => setSortBy('rank')}
-                  className={cn("px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all", sortBy === 'rank' ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "text-white/30 hover:text-white")}
-                >Rank</button>
+            <div className="flex flex-wrap items-center gap-4 px-4 lg:border-l border-white/5 relative z-10 pointer-events-auto">
+              {/* Sliding Segmented Sort Picker */}
+              <div className="flex bg-black/40 border border-white/5 rounded-2xl p-1 relative shrink-0">
+                {(['name', 'date', 'rank'] as const).map((s) => {
+                  const isActive = sortBy === s;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSortBy(s)}
+                      className={cn(
+                        "relative px-5 py-2 text-[10px] font-black uppercase tracking-wider transition-colors duration-300 z-10 whitespace-nowrap cursor-pointer select-none pointer-events-auto",
+                        isActive ? "text-[#05070a]" : "text-white/40 hover:text-white"
+                      )}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeSortBg"
+                          className="absolute inset-0 bg-emerald-500 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] z-[-1]"
+                          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                        />
+                      )}
+                      {s === 'date' ? 'Join Date' : s}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -416,104 +427,100 @@ const Students: React.FC = () => {
 
       {/* Grid Rendering */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-        <AnimatePresence mode="popLayout">
-          {filteredAndSorted.map((student, idx) => (
-            <motion.div 
-              layout
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.6, delay: idx * 0.05, ease: [0.16, 1, 0.3, 1] }}
-              key={student.id} 
-              className="glass-card group relative !p-0 !rounded-[3rem] border-white/5 hover:border-emerald-500/20 hover:shadow-[0_45px_100px_rgba(16,185,129,0.1)] transition-all duration-700 overflow-hidden"
-            >
-              {/* Header Gradient */}
-              <div className="h-32 bg-gradient-to-br from-white/[0.03] via-transparent to-emerald-500/[0.02] relative">
-                <div className="absolute top-6 right-6 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-20">
-                  <button onClick={() => { setPromotingStudent(student); setIsPromoteModalOpen(true); }} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-amber-400 transition-all flex items-center justify-center backdrop-blur-md"><Award className="w-5 h-5" /></button>
-                  <button onClick={() => { setEditingStudent(student); setIsFormOpen(true); }} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-emerald-400 transition-all flex items-center justify-center backdrop-blur-md"><Edit2 className="w-5 h-5" /></button>
-                  <button onClick={() => handleDelete(student.id, student.name)} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-rose-400 transition-all flex items-center justify-center backdrop-blur-md"><Trash2 className="w-5 h-5" /></button>
-                </div>
+        {filteredAndSorted.map((student, idx) => (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: idx * 0.03 }}
+            key={student.id} 
+            className="glass-card group relative !p-0 !rounded-[3rem] border-white/5 hover:border-emerald-500/20 hover:shadow-[0_45px_100px_rgba(16,185,129,0.1)] transition-all duration-700 overflow-hidden"
+          >
+            {/* Header Gradient */}
+            <div className="h-32 bg-gradient-to-br from-white/[0.03] via-transparent to-emerald-500/[0.02] relative">
+              <div className="absolute top-6 right-6 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-20">
+                <button onClick={() => { setPromotingStudent(student); setIsPromoteModalOpen(true); }} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-amber-400 transition-all flex items-center justify-center backdrop-blur-md pointer-events-auto"><Award className="w-5 h-5 pointer-events-none" /></button>
+                <button onClick={() => { setEditingStudent(student); setIsFormOpen(true); }} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-emerald-400 transition-all flex items-center justify-center backdrop-blur-md pointer-events-auto"><Edit2 className="w-5 h-5 pointer-events-none" /></button>
+                <button onClick={() => handleDelete(student.id, student.name)} className="w-10 h-10 rounded-xl bg-black/60 border border-white/10 text-white/40 hover:text-rose-400 transition-all flex items-center justify-center backdrop-blur-md pointer-events-auto"><Trash2 className="w-5 h-5 pointer-events-none" /></button>
               </div>
+            </div>
 
-              <div className="px-10 pb-12 -mt-16 relative z-10">
-                <div className="flex items-end gap-6 mb-10">
-                  <div className="relative shrink-0 group/photo">
-                    <div className={cn("absolute inset-0 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity rounded-full", beltColors[student.belt_level].bg)} />
-                    {student.photo_url ? (
-                      <img src={student.photo_url} alt={student.name} className="w-32 h-32 rounded-[2.5rem] object-cover border-4 border-[#0B0F0C] relative z-10 shadow-2xl transition-transform duration-700 group-hover:scale-110" />
-                    ) : (
-                      <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-white/[0.05] to-transparent border-4 border-[#0B0F0C] flex items-center justify-center text-4xl font-black text-white/10 relative z-10">{student.name.charAt(0)}</div>
-                    )}
-                    <div className={cn("absolute -bottom-2 -right-2 w-10 h-10 rounded-full border-4 border-[#0B0F0C] flex items-center justify-center shadow-2xl z-20", beltColors[student.belt_level].bg, beltColors[student.belt_level].text)}>
-                      <Zap className="w-5 h-5" />
-                    </div>
-                  </div>
-                  <div className="min-w-0 pb-2">
-                    <h3 className="text-2xl font-black text-white italic transition-all group-hover:text-emerald-500 uppercase tracking-tighter truncate leading-none mb-3">{student.name}</h3>
-                    <div className="flex flex-wrap items-center gap-3">
-                      {student.fee_status === 'paid' ? 
-                        <div className="flex items-center gap-1.5 text-[8px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" /> Paid</div> :
-                        <div className="flex items-center gap-1.5 text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 px-2 py-1 rounded-md border border-rose-500/20"><AlertTriangle className="w-3 h-3" /> Unpaid</div>
-                      }
-                      {student.student_type && (
-                        <div className={cn(
-                          "flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md border",
-                          student.student_type === 'New'
-                            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
-                            : "text-blue-400 bg-blue-500/10 border-blue-500/20"
-                        )}>
-                          {student.student_type} Student
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-8">
-                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Phone Number</p>
-                    <p className="text-xs font-black text-white/70 italic leading-none">{student.phone}</p>
-                  </div>
-                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Age & DOB</p>
-                    <p className="text-xs font-black text-white/70 italic leading-none">
-                      {student.age} Yrs {student.dob && `(${safeFormatDate(student.dob, 'dd/MM')})`}
-                    </p>
-                  </div>
-                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Class (Grade)</p>
-                    <p className="text-xs font-black text-white/70 italic leading-none truncate">{student.class_std || 'N/A'}</p>
-                  </div>
-                  <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Father's Phone</p>
-                    <p className="text-xs font-black text-white/70 italic leading-none">{student.parent_phone}</p>
-                  </div>
-                  {student.mothers_name && (
-                    <div className="col-span-2 glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
-                      <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Mother's Name</p>
-                      <p className="text-xs font-black text-white/70 italic leading-none truncate">{student.mothers_name}</p>
-                    </div>
+            <div className="px-10 pb-12 -mt-16 relative z-10">
+              <div className="flex items-end gap-6 mb-10">
+                <div className="relative shrink-0 group/photo">
+                  <div className={cn("absolute inset-0 blur-3xl opacity-20 group-hover:opacity-50 transition-opacity rounded-full", beltColors[student.belt_level].bg)} />
+                  {student.photo_url ? (
+                    <img src={student.photo_url} alt={student.name} className="w-32 h-32 rounded-[2.5rem] object-cover border-4 border-[#0B0F0C] relative z-10 shadow-2xl transition-transform duration-700 group-hover:scale-110" />
+                  ) : (
+                    <div className="w-32 h-32 rounded-[2.5rem] bg-gradient-to-br from-white/[0.05] to-transparent border-4 border-[#0B0F0C] flex items-center justify-center text-4xl font-black text-white/10 relative z-10">{student.name.charAt(0)}</div>
                   )}
+                  <div className={cn("absolute -bottom-2 -right-2 w-10 h-10 rounded-full border-4 border-[#0B0F0C] flex items-center justify-center shadow-2xl z-20", beltColors[student.belt_level].bg, beltColors[student.belt_level].text)}>
+                    <Zap className="w-5 h-5" />
+                  </div>
                 </div>
-
-                <div className="flex items-center justify-between pt-10 border-t border-white/5">
-                   <div className="space-y-3">
-                      <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em]">Rank</p>
-                      <div className={cn("px-6 py-2.5 rounded-xl border font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-3", beltColors[student.belt_level].bg, beltColors[student.belt_level].border, beltColors[student.belt_level].text, beltColors[student.belt_level].glow)}>
-                         <Award className="w-4 h-4" />
-                         {student.belt_level}
+                <div className="min-w-0 pb-2">
+                  <h3 className="text-2xl font-black text-white italic transition-all group-hover:text-emerald-500 uppercase tracking-tighter truncate leading-none mb-3">{student.name}</h3>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {student.fee_status === 'paid' ? 
+                      <div className="flex items-center gap-1.5 text-[8px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" /> Paid</div> :
+                      <div className="flex items-center gap-1.5 text-[8px] font-black text-rose-400 uppercase tracking-widest bg-rose-500/10 px-2 py-1 rounded-md border border-rose-500/20"><AlertTriangle className="w-3 h-3" /> Unpaid</div>
+                    }
+                    {student.student_type && (
+                      <div className={cn(
+                        "flex items-center gap-1.5 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md border",
+                        student.student_type === 'New'
+                          ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                          : "text-blue-400 bg-blue-500/10 border-blue-500/20"
+                      )}>
+                        {student.student_type} Student
                       </div>
-                   </div>
-                   <div className="text-right">
-                      <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] mb-2">Monthly Fee</p>
-                      <p className="text-3xl font-black text-white group-hover:text-emerald-400 transition-all italic tracking-tighter leading-none">₹{student.fee_amount}</p>
-                   </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                  <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Phone Number</p>
+                  <p className="text-xs font-black text-white/70 italic leading-none">{student.phone}</p>
+                </div>
+                <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                  <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Age & DOB</p>
+                  <p className="text-xs font-black text-white/70 italic leading-none">
+                    {student.age} Yrs {student.dob && `(${safeFormatDate(student.dob, 'dd/MM')})`}
+                  </p>
+                </div>
+                <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                  <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Class (Grade)</p>
+                  <p className="text-xs font-black text-white/70 italic leading-none truncate">{student.class_std || 'N/A'}</p>
+                </div>
+                <div className="glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                  <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Father's Phone</p>
+                  <p className="text-xs font-black text-white/70 italic leading-none">{student.parent_phone}</p>
+                </div>
+                {student.mothers_name && (
+                  <div className="col-span-2 glass-card !p-4 !rounded-2xl border-white/5 hover:bg-white/[0.04] transition-all">
+                    <p className="text-[8px] font-black text-white/20 uppercase tracking-widest mb-1.5">Mother's Name</p>
+                    <p className="text-xs font-black text-white/70 italic leading-none truncate">{student.mothers_name}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between pt-10 border-t border-white/5">
+                 <div className="space-y-3">
+                    <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em]">Rank</p>
+                    <div className={cn("px-6 py-2.5 rounded-xl border font-black text-[10px] uppercase tracking-widest inline-flex items-center gap-3", beltColors[student.belt_level].bg, beltColors[student.belt_level].border, beltColors[student.belt_level].text, beltColors[student.belt_level].glow)}>
+                       <Award className="w-4 h-4" />
+                       {student.belt_level}
+                    </div>
+                 </div>
+                 <div className="text-right">
+                    <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.4em] mb-2">Monthly Fee</p>
+                    <p className="text-3xl font-black text-white group-hover:text-emerald-400 transition-all italic tracking-tighter leading-none">₹{student.fee_amount}</p>
+                 </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       <StudentForm
