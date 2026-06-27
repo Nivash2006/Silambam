@@ -567,9 +567,9 @@ const Students: React.FC = () => {
                   <button 
                     type="button"
                     onClick={() => setIsDownloadModalOpen(false)}
-                    className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all border border-white/5"
+                    className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-500 transition-all border border-white/5 cursor-pointer pointer-events-auto relative z-10"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5 pointer-events-none" />
                   </button>
                 </div>
 

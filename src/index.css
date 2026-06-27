@@ -36,7 +36,7 @@
 
   .glass-card::before {
     content: '';
-    @apply absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-emerald-500/5 opacity-0 transition-opacity duration-700;
+    @apply absolute inset-0 bg-gradient-to-br from-white/[0.05] via-transparent to-emerald-500/5 opacity-0 transition-opacity duration-700 pointer-events-none;
   }
 
   .glass-card:hover {
