@@ -444,7 +444,9 @@ const Tournaments: React.FC = () => {
   const filteredTshirts = students.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(tshirtSearch.toLowerCase()) ||
                           (s.class_std || '').toLowerCase().includes(tshirtSearch.toLowerCase());
-    const matchesFilter = tshirtFilter === 'All' || s.tshirt_status === tshirtFilter;
+    const matchesFilter = tshirtFilter === 'All' || 
+                          (tshirtFilter === 'None' && (!s.tshirt_status || s.tshirt_status === 'None')) ||
+                          s.tshirt_status === tshirtFilter;
     return matchesSearch && matchesFilter;
   });
 
@@ -1044,17 +1046,17 @@ const Tournaments: React.FC = () => {
                           setEditingStudent(student);
                           setIsStudentFormOpen(true);
                         }}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0"
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
                         title="Edit Student"
                       >
-                        <Edit2 className="w-4.5 h-4.5" />
+                        <Edit2 className="w-4.5 h-4.5 pointer-events-none" />
                       </button>
                       <button
                         onClick={() => handleDeleteStudent(student.id, student.name)}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0"
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
                         title="Delete Student"
                       >
-                        <Trash2 className="w-4.5 h-4.5" />
+                        <Trash2 className="w-4.5 h-4.5 pointer-events-none" />
                       </button>
                     </div>
                   </div>
