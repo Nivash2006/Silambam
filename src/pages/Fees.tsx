@@ -384,48 +384,46 @@ const Fees: React.FC = () => {
                 })}
              </div>
           </div>
-
-          <div className="glass-card !p-8 !rounded-[2.5rem] border-white/5 space-y-6">
-             <div className="flex items-center gap-3">
-                <Filter className="w-4 h-4 text-emerald-400" />
-                <h4 className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Filter</h4>
-             </div>
-             <div className="flex flex-col gap-2">
-                {(['all', 'paid', 'pending'] as const).map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFilter(f)}
-                    className={cn(
-                      "w-full h-14 rounded-xl flex items-center justify-between px-6 px-8 text-[10px] font-black uppercase tracking-[0.2em] transition-all border",
-                      filter === f 
-                        ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20" 
-                        : "bg-white/[0.02] border-white/5 text-white/30 hover:text-white hover:bg-white/5"
-                    )}
-                  >
-                    {f}
-                    {filter === f && <CheckCircle2 className="w-4 h-4" />}
-                  </button>
-                ))}
-             </div>
-          </div>
         </div>
 
         {/* Right Ledger List */}
         <div className="lg:col-span-8 space-y-8">
-           <div className={cn(
-             "glass-card !p-6 !rounded-[2.5rem] flex items-center gap-6 border-white/5 bg-white/[0.01] transition-all duration-300",
-             isSearchFocused && "border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.05)] bg-white/[0.02]"
-           )}>
-              <Search className={cn("w-5 h-5 transition-colors", isSearchFocused ? "text-emerald-500" : "text-white/10")} />
-              <input 
-                type="text" 
-                placeholder="Search student by name..."
-                className="bg-transparent flex-1 font-bold text-white placeholder:text-white/10 focus:outline-none"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
-              />
+           {/* Search and Filters */}
+           <div className="flex flex-col md:flex-row gap-6">
+              {/* Search Bar */}
+              <div className={cn(
+                "flex-1 glass-card !p-5 !rounded-[2rem] flex items-center gap-4 border-white/5 bg-white/[0.01] transition-all duration-300",
+                isSearchFocused && "border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.05)] bg-white/[0.02]"
+              )}>
+                 <Search className={cn("w-5 h-5 transition-colors", isSearchFocused ? "text-emerald-500" : "text-white/10")} />
+                 <input 
+                   type="text" 
+                   placeholder="Search student by name..."
+                   className="bg-transparent flex-1 font-bold text-white placeholder:text-white/10 focus:outline-none"
+                   value={search}
+                   onChange={e => setSearch(e.target.value)}
+                   onFocus={() => setIsSearchFocused(true)}
+                   onBlur={() => setIsSearchFocused(false)}
+                 />
+              </div>
+
+              {/* Status Filters (Pills) */}
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                 {(['all', 'paid', 'pending'] as const).map((f) => (
+                   <button
+                     key={f}
+                     onClick={() => setFilter(f)}
+                     className={cn(
+                       "px-6 py-3 rounded-xl text-[10px] font-black border uppercase tracking-[0.2em] transition-all whitespace-nowrap cursor-pointer pointer-events-auto",
+                       filter === f 
+                         ? "bg-emerald-500 border-transparent text-[#05070a] shadow-lg shadow-emerald-500/20" 
+                         : "bg-white/[0.02] border-white/5 text-white/30 hover:text-white hover:bg-white/5"
+                     )}
+                   >
+                     {f === 'all' ? 'All' : f}
+                   </button>
+                 ))}
+              </div>
            </div>
 
            <div className="grid grid-cols-1 gap-4">
