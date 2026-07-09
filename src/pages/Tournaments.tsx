@@ -1143,128 +1143,195 @@ const Tournaments: React.FC = () => {
 
             {/* Students T-Shirt List */}
             <div className="grid grid-cols-1 gap-5">
-              {filteredTshirts.map(student => (
+              {filteredTshirts.map(student => {
+                const tshirtRemaining = (student.tshirt_total_amount || 0) - (student.tshirt_amount_paid || 0);
+                return (
                 <div 
                   key={student.id} 
-                  className="glass-card flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 !p-5 sm:!p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-3xl"
+                  className="glass-card flex flex-col gap-4 sm:gap-5 !p-5 sm:!p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-3xl"
                 >
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xl font-black text-white italic uppercase tracking-tight">{student.name}</h4>
-                    <div className="flex flex-wrap gap-4 mt-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                      <span>Phone: <strong className="text-white/60">{student.phone || 'N/A'}</strong></span>
-                      <span>•</span>
-                      <span>Age: <strong className="text-white/60">{student.age} Yrs</strong></span>
-                      <span>•</span>
-                      <span>Class: <strong className="text-white/60">{student.class_std || 'N/A'}</strong></span>
+                  {/* Top Row: Name + Actions */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xl font-black text-white italic uppercase tracking-tight">{student.name}</h4>
+                      <div className="flex flex-wrap gap-4 mt-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                        <span>Phone: <strong className="text-white/60">{student.phone || 'N/A'}</strong></span>
+                        <span>•</span>
+                        <span>Age: <strong className="text-white/60">{student.age} Yrs</strong></span>
+                        <span>•</span>
+                        <span>Class: <strong className="text-white/60">{student.class_std || 'N/A'}</strong></span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                      {/* Wants T-Shirt Toggle Switch */}
+                      <div className="flex flex-col gap-1 shrink-0 items-start">
+                        <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Wants T-Shirt</label>
+                        <button
+                          onClick={() => handleToggleTshirt(student.id, student.tshirt_status, student.tshirt_size)}
+                          className={cn(
+                            "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                            (student.tshirt_status && student.tshirt_status !== 'None')
+                              ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+                              : "bg-white/[0.02] border-white/5"
+                          )}
+                          title={(student.tshirt_status && student.tshirt_status !== 'None') ? "Turn off (No T-Shirt)" : "Turn on (Needs T-Shirt)"}
+                        >
+                          <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.tshirt_status && student.tshirt_status !== 'None') ? 1 : 0 }}>
+                            ON
+                          </span>
+                          <span className="absolute right-2 text-[8px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.tshirt_status && student.tshirt_status !== 'None') ? 0 : 1 }}>
+                            OFF
+                          </span>
+                          <div
+                            className={cn(
+                              "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                              (student.tshirt_status && student.tshirt_status !== 'None')
+                                ? "bg-[#05070a] translate-x-7" 
+                                : "bg-white/10 translate-x-0"
+                            )}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Show size and paid toggle only if student Wants T-Shirt */}
+                      {student.tshirt_status && student.tshirt_status !== 'None' && (
+                        <>
+                          {/* Size Select Dropdown */}
+                          <div className="space-y-1 w-full sm:w-36 shrink-0">
+                            <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Size</label>
+                            <div className="relative">
+                              <select
+                                value={student.tshirt_size || 'None'}
+                                onChange={(e) => handleUpdateTshirt(student.id, { tshirt_size: e.target.value })}
+                                className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                              >
+                                <option value="None" className="bg-[#0f172a] text-white">None</option>
+                                {['22', '24', '26', '28', '30', '32', '34', '36', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
+                                  <option key={sz} value={sz} className="bg-[#0f172a] text-white">Size {sz}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Separate Paid Toggle */}
+                          <div className="flex flex-col gap-1 shrink-0 items-start">
+                            <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Fee Paid</label>
+                            <button
+                              onClick={() => handleUpdateTshirt(student.id, {
+                                tshirt_status: (student.tshirt_status === 'Bought (Paid)' ? 'Wants' : 'Bought (Paid)') as any
+                              })}
+                              className={cn(
+                                "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                                student.tshirt_status === 'Bought (Paid)'
+                                  ? "bg-amber-500 border-transparent shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                                  : "bg-white/[0.02] border-white/5"
+                              )}
+                              title={student.tshirt_status === 'Bought (Paid)' ? "Mark as Unpaid" : "Mark as Paid"}
+                            >
+                              <span className="absolute left-2 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.tshirt_status === 'Bought (Paid)' ? 1 : 0 }}>
+                                PAID
+                              </span>
+                              <span className="absolute right-1.5 text-[7px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.tshirt_status === 'Bought (Paid)' ? 0 : 1 }}>
+                                DUE
+                              </span>
+                              <div className={cn(
+                                "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                                student.tshirt_status === 'Bought (Paid)'
+                                  ? "bg-[#05070a] translate-x-7"
+                                  : "bg-white/20 translate-x-0"
+                              )} />
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 justify-end ml-auto sm:ml-0">
+                        <button
+                          onClick={() => {
+                            setEditingStudent(student);
+                            setIsStudentFormOpen(true);
+                          }}
+                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
+                          title="Edit Student"
+                        >
+                          <Edit2 className="w-4.5 h-4.5 pointer-events-none" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteStudent(student.id, student.name)}
+                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
+                          title="Delete Student"
+                        >
+                          <Trash2 className="w-4.5 h-4.5 pointer-events-none" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 w-full md:w-auto">
-                    {/* Wants T-Shirt Toggle Switch */}
-                    <div className="flex flex-col gap-1 shrink-0 items-start">
-                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Wants T-Shirt</label>
-                      <button
-                        onClick={() => handleToggleTshirt(student.id, student.tshirt_status, student.tshirt_size)}
-                        className={cn(
-                          "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
-                          (student.tshirt_status && student.tshirt_status !== 'None')
-                            ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
-                            : "bg-white/[0.02] border-white/5"
-                        )}
-                        title={(student.tshirt_status && student.tshirt_status !== 'None') ? "Turn off (No T-Shirt)" : "Turn on (Needs T-Shirt)"}
-                      >
-                        <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.tshirt_status && student.tshirt_status !== 'None') ? 1 : 0 }}>
-                          ON
-                        </span>
-                        <span className="absolute right-2 text-[8px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.tshirt_status && student.tshirt_status !== 'None') ? 0 : 1 }}>
-                          OFF
-                        </span>
-                        <div
-                          className={cn(
-                            "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
-                            (student.tshirt_status && student.tshirt_status !== 'None')
-                              ? "bg-[#05070a] translate-x-7" 
-                              : "bg-white/10 translate-x-0"
-                          )}
+                  {/* Bottom Row: Payment details — only shown when Wants T-Shirt */}
+                  {student.tshirt_status && student.tshirt_status !== 'None' && (
+                    <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4 items-end">
+                      {/* Total Amount */}
+                      <div className="space-y-1 w-28 shrink-0">
+                        <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Total (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          defaultValue={student.tshirt_total_amount ?? ''}
+                          key={`tshirt-total-${student.id}-${student.tshirt_total_amount}`}
+                          onBlur={(e) => {
+                            const val = e.target.value === '' ? null : Number(e.target.value);
+                            handleUpdateTshirt(student.id, { tshirt_total_amount: val as any });
+                          }}
+                          className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 w-full text-xs font-black text-white focus:outline-none focus:ring-1 ring-emerald-500/30 focus:border-emerald-500/40"
                         />
-                      </button>
-                    </div>
+                      </div>
 
-                    {/* Show size and paid toggle only if student Wants T-Shirt */}
-                    {student.tshirt_status && student.tshirt_status !== 'None' && (
-                      <>
-                        {/* Size Select Dropdown */}
-                        <div className="space-y-1 w-full sm:w-36 shrink-0">
-                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Size</label>
-                          <div className="relative">
-                            <select
-                              value={student.tshirt_size || 'None'}
-                              onChange={(e) => handleUpdateTshirt(student.id, { tshirt_size: e.target.value })}
-                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
-                            >
-                              <option value="None" className="bg-[#0f172a] text-white">None</option>
-                              {['22', '24', '26', '28', '30', '32', '34', '36', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map(sz => (
-                                <option key={sz} value={sz} className="bg-[#0f172a] text-white">Size {sz}</option>
-                              ))}
-                            </select>
+                      {/* Amount Paid */}
+                      <div className="space-y-1 w-28 shrink-0">
+                        <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Paid (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          defaultValue={student.tshirt_amount_paid ?? ''}
+                          key={`tshirt-paid-${student.id}-${student.tshirt_amount_paid}`}
+                          onBlur={(e) => {
+                            const val = e.target.value === '' ? null : Number(e.target.value);
+                            handleUpdateTshirt(student.id, { tshirt_amount_paid: val as any });
+                          }}
+                          className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 w-full text-xs font-black text-emerald-400 focus:outline-none focus:ring-1 ring-emerald-500/30 focus:border-emerald-500/40"
+                        />
+                      </div>
+
+                      {/* Remaining Badge */}
+                      {(student.tshirt_total_amount || 0) > 0 && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest ml-1">Balance (₹)</label>
+                          <div className={cn(
+                            "px-4 py-2 rounded-xl text-xs font-black border",
+                            tshirtRemaining <= 0
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                              : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                          )}>
+                            {tshirtRemaining <= 0 ? '✓ Cleared' : `₹${tshirtRemaining} Due`}
                           </div>
                         </div>
+                      )}
 
-                        {/* Separate Paid Toggle */}
-                        <div className="flex flex-col gap-1 shrink-0 items-start">
-                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Fee Paid</label>
-                          <button
-                            onClick={() => handleUpdateTshirt(student.id, {
-                              tshirt_status: (student.tshirt_status === 'Bought (Paid)' ? 'Wants' : 'Bought (Paid)') as any
-                            })}
-                            className={cn(
-                              "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
-                              student.tshirt_status === 'Bought (Paid)'
-                                ? "bg-amber-500 border-transparent shadow-[0_0_20px_rgba(245,158,11,0.25)]"
-                                : "bg-white/[0.02] border-white/5"
-                            )}
-                            title={student.tshirt_status === 'Bought (Paid)' ? "Mark as Unpaid" : "Mark as Paid"}
-                          >
-                            <span className="absolute left-2 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.tshirt_status === 'Bought (Paid)' ? 1 : 0 }}>
-                              PAID
-                            </span>
-                            <span className="absolute right-1.5 text-[7px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.tshirt_status === 'Bought (Paid)' ? 0 : 1 }}>
-                              DUE
-                            </span>
-                            <div className={cn(
-                              "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
-                              student.tshirt_status === 'Bought (Paid)'
-                                ? "bg-[#05070a] translate-x-7"
-                                : "bg-white/20 translate-x-0"
-                            )} />
-                          </button>
+                      {/* Summary pill */}
+                      {(student.tshirt_total_amount || 0) > 0 && (
+                        <div className="text-[9px] font-black text-white/20 uppercase tracking-widest self-end pb-2">
+                          ₹{student.tshirt_amount_paid || 0} of ₹{student.tshirt_total_amount} paid
                         </div>
-                      </>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 justify-end w-full sm:w-auto mt-2 sm:mt-0">
-                      <button
-                        onClick={() => {
-                          setEditingStudent(student);
-                          setIsStudentFormOpen(true);
-                        }}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
-                        title="Edit Student"
-                      >
-                        <Edit2 className="w-4.5 h-4.5 pointer-events-none" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteStudent(student.id, student.name)}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
-                        title="Delete Student"
-                      >
-                        <Trash2 className="w-4.5 h-4.5 pointer-events-none" />
-                      </button>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
-              ))}
+              );
+              })}
               {filteredTshirts.length === 0 && (
                 <div className="py-24 text-center glass-card border-dashed border-white/5 text-white/20 uppercase tracking-widest text-xs font-black">
                   No students match the criteria
@@ -1369,126 +1436,193 @@ const Tournaments: React.FC = () => {
 
             {/* Students Stick List */}
             <div className="grid grid-cols-1 gap-5">
-              {filteredSticks.map(student => (
+              {filteredSticks.map(student => {
+                const stickRemaining = (student.stick_total_amount || 0) - (student.stick_amount_paid || 0);
+                return (
                 <div 
                   key={student.id} 
-                  className="glass-card flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 !p-5 sm:!p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-3xl"
+                  className="glass-card flex flex-col gap-4 sm:gap-5 !p-5 sm:!p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-3xl"
                 >
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-xl font-black text-white italic uppercase tracking-tight">{student.name}</h4>
-                    <div className="flex flex-wrap gap-4 mt-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">
-                      <span>Phone: <strong className="text-white/60">{student.phone || 'N/A'}</strong></span>
-                      <span>•</span>
-                      <span>Age: <strong className="text-white/60">{student.age} Yrs</strong></span>
-                      <span>•</span>
-                      <span>Class: <strong className="text-white/60">{student.class_std || 'N/A'}</strong></span>
+                  {/* Top Row: Name + Controls */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xl font-black text-white italic uppercase tracking-tight">{student.name}</h4>
+                      <div className="flex flex-wrap gap-4 mt-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                        <span>Phone: <strong className="text-white/60">{student.phone || 'N/A'}</strong></span>
+                        <span>•</span>
+                        <span>Age: <strong className="text-white/60">{student.age} Yrs</strong></span>
+                        <span>•</span>
+                        <span>Class: <strong className="text-white/60">{student.class_std || 'N/A'}</strong></span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+                      {/* Wants Stick Toggle Switch */}
+                      <div className="flex flex-col gap-1 shrink-0 items-start">
+                        <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Wants Stick</label>
+                        <button
+                          onClick={() => handleToggleStick(student.id, student.stick_status, student.stick_size)}
+                          className={cn(
+                            "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                            (student.stick_status && student.stick_status !== 'None')
+                              ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+                              : "bg-white/[0.02] border-white/5"
+                          )}
+                          title={(student.stick_status && student.stick_status !== 'None') ? "Turn off (No Stick)" : "Turn on (Needs Stick)"}
+                        >
+                          <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.stick_status && student.stick_status !== 'None') ? 1 : 0 }}>
+                            ON
+                          </span>
+                          <span className="absolute right-2 text-[8px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.stick_status && student.stick_status !== 'None') ? 0 : 1 }}>
+                            OFF
+                          </span>
+                          <div className={cn(
+                            "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                            (student.stick_status && student.stick_status !== 'None') 
+                              ? "bg-[#05070a] translate-x-7" 
+                              : "bg-white/20"
+                          )} />
+                        </button>
+                      </div>
+
+                      {/* Show size and paid toggle only if student Wants Stick */}
+                      {student.stick_status && student.stick_status !== 'None' && (
+                        <>
+                          {/* Size Select Dropdown */}
+                          <div className="space-y-1 w-full sm:w-36 shrink-0">
+                            <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Stick Length</label>
+                            <div className="relative">
+                              <select
+                                value={student.stick_size || 'None'}
+                                onChange={(e) => handleUpdateStick(student.id, { stick_size: e.target.value })}
+                                className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                              >
+                                <option value="None" className="bg-[#0f172a] text-white">None</option>
+                                {['3.0 ft', '3.5 ft', '4.0 ft', '4.5 ft', '5.0 ft', '5.5 ft', '6.0 ft'].map(sz => (
+                                  <option key={sz} value={sz} className="bg-[#0f172a] text-white">Length {sz}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Separate Paid Toggle for Stick */}
+                          <div className="flex flex-col gap-1 shrink-0 items-start">
+                            <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Fee Paid</label>
+                            <button
+                              onClick={() => handleUpdateStick(student.id, {
+                                stick_status: (student.stick_status === 'Bought (Paid)' ? 'Wants' : 'Bought (Paid)') as any
+                              })}
+                              className={cn(
+                                "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                                student.stick_status === 'Bought (Paid)'
+                                  ? "bg-amber-500 border-transparent shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                                  : "bg-white/[0.02] border-white/5"
+                              )}
+                              title={student.stick_status === 'Bought (Paid)' ? "Mark as Unpaid" : "Mark as Paid"}
+                            >
+                              <span className="absolute left-2 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.stick_status === 'Bought (Paid)' ? 1 : 0 }}>
+                                PAID
+                              </span>
+                              <span className="absolute right-1.5 text-[7px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.stick_status === 'Bought (Paid)' ? 0 : 1 }}>
+                                DUE
+                              </span>
+                              <div className={cn(
+                                "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                                student.stick_status === 'Bought (Paid)'
+                                  ? "bg-[#05070a] translate-x-7"
+                                  : "bg-white/20 translate-x-0"
+                              )} />
+                            </button>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 justify-end ml-auto sm:ml-0">
+                        <button
+                          onClick={() => {
+                            setEditingStudent(student);
+                            setIsStudentFormOpen(true);
+                          }}
+                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
+                          title="Edit Student"
+                        >
+                          <Edit2 className="w-4.5 h-4.5 pointer-events-none" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteStudent(student.id, student.name)}
+                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
+                          title="Delete Student"
+                        >
+                          <Trash2 className="w-4.5 h-4.5 pointer-events-none" />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 w-full md:w-auto">
-                    {/* Wants Stick Toggle Switch */}
-                    <div className="flex flex-col gap-1 shrink-0 items-start">
-                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Wants Stick</label>
-                      <button
-                        onClick={() => handleToggleStick(student.id, student.stick_status, student.stick_size)}
-                        className={cn(
-                          "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
-                          (student.stick_status && student.stick_status !== 'None')
-                            ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
-                            : "bg-white/[0.02] border-white/5"
-                        )}
-                        title={(student.stick_status && student.stick_status !== 'None') ? "Turn off (No Stick)" : "Turn on (Needs Stick)"}
-                      >
-                        <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.stick_status && student.stick_status !== 'None') ? 1 : 0 }}>
-                          ON
-                        </span>
-                        <span className="absolute right-2 text-[8px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.stick_status && student.stick_status !== 'None') ? 0 : 1 }}>
-                          OFF
-                        </span>
-                        <div className={cn(
-                          "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
-                          (student.stick_status && student.stick_status !== 'None') 
-                            ? "bg-[#05070a] translate-x-7" 
-                            : "bg-white/20"
-                        )} />
-                      </button>
-                    </div>
+                  {/* Bottom Row: Payment details — only shown when Wants Stick */}
+                  {student.stick_status && student.stick_status !== 'None' && (
+                    <div className="border-t border-white/5 pt-4 flex flex-wrap gap-4 items-end">
+                      {/* Total Amount */}
+                      <div className="space-y-1 w-28 shrink-0">
+                        <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Total (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          defaultValue={student.stick_total_amount ?? ''}
+                          key={`stick-total-${student.id}-${student.stick_total_amount}`}
+                          onBlur={(e) => {
+                            const val = e.target.value === '' ? null : Number(e.target.value);
+                            handleUpdateStick(student.id, { stick_total_amount: val as any });
+                          }}
+                          className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 w-full text-xs font-black text-white focus:outline-none focus:ring-1 ring-emerald-500/30 focus:border-emerald-500/40"
+                        />
+                      </div>
 
-                    {/* Show size and paid toggle only if student Wants Stick */}
-                    {student.stick_status && student.stick_status !== 'None' && (
-                      <>
-                        {/* Size Select Dropdown */}
-                        <div className="space-y-1 w-full sm:w-36 shrink-0">
-                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Stick Length</label>
-                          <div className="relative">
-                            <select
-                              value={student.stick_size || 'None'}
-                              onChange={(e) => handleUpdateStick(student.id, { stick_size: e.target.value })}
-                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
-                            >
-                              <option value="None" className="bg-[#0f172a] text-white">None</option>
-                              {['3.0 ft', '3.5 ft', '4.0 ft', '4.5 ft', '5.0 ft', '5.5 ft', '6.0 ft'].map(sz => (
-                                <option key={sz} value={sz} className="bg-[#0f172a] text-white">Length {sz}</option>
-                              ))}
-                            </select>
+                      {/* Amount Paid */}
+                      <div className="space-y-1 w-28 shrink-0">
+                        <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Paid (₹)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          defaultValue={student.stick_amount_paid ?? ''}
+                          key={`stick-paid-${student.id}-${student.stick_amount_paid}`}
+                          onBlur={(e) => {
+                            const val = e.target.value === '' ? null : Number(e.target.value);
+                            handleUpdateStick(student.id, { stick_amount_paid: val as any });
+                          }}
+                          className="bg-black/40 border border-white/5 rounded-xl px-3 py-2 w-full text-xs font-black text-emerald-400 focus:outline-none focus:ring-1 ring-emerald-500/30 focus:border-emerald-500/40"
+                        />
+                      </div>
+
+                      {/* Remaining Badge */}
+                      {(student.stick_total_amount || 0) > 0 && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest ml-1">Balance (₹)</label>
+                          <div className={cn(
+                            "px-4 py-2 rounded-xl text-xs font-black border",
+                            stickRemaining <= 0
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                              : "bg-rose-500/10 border-rose-500/20 text-rose-400"
+                          )}>
+                            {stickRemaining <= 0 ? '✓ Cleared' : `₹${stickRemaining} Due`}
                           </div>
                         </div>
+                      )}
 
-                        {/* Separate Paid Toggle for Stick */}
-                        <div className="flex flex-col gap-1 shrink-0 items-start">
-                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Fee Paid</label>
-                          <button
-                            onClick={() => handleUpdateStick(student.id, {
-                              stick_status: (student.stick_status === 'Bought (Paid)' ? 'Wants' : 'Bought (Paid)') as any
-                            })}
-                            className={cn(
-                              "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
-                              student.stick_status === 'Bought (Paid)'
-                                ? "bg-amber-500 border-transparent shadow-[0_0_20px_rgba(245,158,11,0.25)]"
-                                : "bg-white/[0.02] border-white/5"
-                            )}
-                            title={student.stick_status === 'Bought (Paid)' ? "Mark as Unpaid" : "Mark as Paid"}
-                          >
-                            <span className="absolute left-2 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.stick_status === 'Bought (Paid)' ? 1 : 0 }}>
-                              PAID
-                            </span>
-                            <span className="absolute right-1.5 text-[7px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.stick_status === 'Bought (Paid)' ? 0 : 1 }}>
-                              DUE
-                            </span>
-                            <div className={cn(
-                              "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
-                              student.stick_status === 'Bought (Paid)'
-                                ? "bg-[#05070a] translate-x-7"
-                                : "bg-white/20 translate-x-0"
-                            )} />
-                          </button>
+                      {/* Summary pill */}
+                      {(student.stick_total_amount || 0) > 0 && (
+                        <div className="text-[9px] font-black text-white/20 uppercase tracking-widest self-end pb-2">
+                          ₹{student.stick_amount_paid || 0} of ₹{student.stick_total_amount} paid
                         </div>
-                      </>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 justify-end w-full sm:w-auto mt-2 sm:mt-0">
-                      <button
-                        onClick={() => {
-                          setEditingStudent(student);
-                          setIsStudentFormOpen(true);
-                        }}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
-                        title="Edit Student"
-                      >
-                        <Edit2 className="w-4.5 h-4.5 pointer-events-none" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteStudent(student.id, student.name)}
-                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
-                        title="Delete Student"
-                      >
-                        <Trash2 className="w-4.5 h-4.5 pointer-events-none" />
-                      </button>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
-              ))}
+              );
+              })}
               {filteredSticks.length === 0 && (
                 <div className="py-24 text-center glass-card border-dashed border-white/5 text-white/20 uppercase tracking-widest text-xs font-black">
                   No students match the criteria
