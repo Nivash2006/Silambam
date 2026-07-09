@@ -71,6 +71,8 @@ const PrivateStudents: React.FC = () => {
   const [currentMonth, setCurrentMonth] = useState(format(new Date(), 'MMMM yyyy'));
   const [payments, setPayments] = useState<Record<string, 'paid' | 'pending'>>({});
 
+  const [isSchemaMissing, setIsSchemaMissing] = useState(false);
+
   // Confirmation Modal
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
@@ -100,7 +102,8 @@ const PrivateStudents: React.FC = () => {
 
       if (studentError) {
         // Fallback for missing is_private column (schema update alert)
-        if (studentError.code === 'PGRST116' || studentError.message?.includes('column "is_private" does not exist')) {
+        if (studentError.code === 'PGRST116' || studentError.message?.includes('column "is_private" does not exist') || studentError.code === '42703') {
+          setIsSchemaMissing(true);
           setStudents([]);
           setLoading(false);
           return;
@@ -108,6 +111,7 @@ const PrivateStudents: React.FC = () => {
         throw studentError;
       }
 
+      setIsSchemaMissing(false);
       setStudents(studentData || []);
 
       if (activeTab === 'attendance') {
@@ -326,8 +330,7 @@ const PrivateStudents: React.FC = () => {
     );
   }
 
-  // Schema update check
-  const isSchemaMissing = students.length === 0 && !loading;
+
 
   return (
     <div className="space-y-12 lg:space-y-16 pb-20">
