@@ -459,6 +459,58 @@ const Tournaments: React.FC = () => {
     toast.success('Roster Excel downloaded successfully.');
   };
 
+  // PDF Export for Stick Paid Roster
+  const handleDownloadStickPaidPDF = () => {
+    const paidList = students.filter(s => s.stick_status === 'Bought (Paid)');
+    if (paidList.length === 0) {
+      toast.error('No students have paid for sticks yet.');
+      return;
+    }
+    
+    const doc = new jsPDF();
+    doc.setFont("Helvetica", "bold");
+    doc.setFontSize(22);
+    doc.setTextColor(16, 185, 129); // Emerald
+    doc.text("Maha Silambam Academy", 14, 20);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`STICK PAYMENT & DELIVERY ROSTER`, 14, 30);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Total Paid: ${paidList.length} Students`, 14, 38);
+    doc.text(`Exported On: ${format(new Date(), 'dd MMMM yyyy, hh:mm a')}`, 14, 44);
+
+    const headers = [['#', 'Student Name', 'Age', 'Class/Std', 'Stick Length', 'Status', 'Phone Number']];
+    const data = paidList.map((student, index) => [
+      (index + 1).toString(),
+      student.name,
+      student.age.toString(),
+      student.class_std || 'N/A',
+      student.stick_size || 'None',
+      student.stick_status || 'Bought (Paid)',
+      student.phone || 'N/A'
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 50,
+      theme: 'grid',
+      headStyles: { fillColor: [16, 185, 129], fontStyle: 'bold' },
+      styles: { fontSize: 9 }
+    });
+
+    // Signature Block
+    const finalY = (doc as any).lastAutoTable.finalY + 20;
+    doc.setFontSize(10);
+    doc.text("Authorized Signature: _______________________", 14, finalY);
+
+    doc.save(`Stick_Paid_Roster_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    toast.success('Stick Paid Roster PDF downloaded.');
+  };
+
   const filteredPast = tournaments.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -1139,6 +1191,46 @@ const Tournaments: React.FC = () => {
                 </div>
               ))}
             </div>
+
+            {/* Paid Roster Summary Card */}
+            {stickStats.paid > 0 && (
+              <div className="glass-card !p-8 !rounded-[2.5rem] border-white/5 bg-emerald-500/[0.02] space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-black italic uppercase tracking-wider text-emerald-400">
+                      Paid & Cleared Roster ({stickStats.paid} Students)
+                    </h3>
+                    <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest mt-1">
+                      Students who have paid for their Silambam sticks
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleDownloadStickPaidPDF}
+                    className="btn-primary !h-12 !px-6 group shadow-lg shadow-emerald-500/10 !rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-2 self-start sm:self-auto shrink-0 cursor-pointer pointer-events-auto"
+                  >
+                    <DownloadCloud className="w-4 h-4" />
+                    Download Paid List PDF
+                  </button>
+                </div>
+                
+                <div className="flex flex-wrap gap-3">
+                  {students
+                    .filter(s => s.stick_status === 'Bought (Paid)')
+                    .map(student => (
+                      <div 
+                        key={student.id} 
+                        className="px-4 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 transition-all hover:bg-emerald-500/20"
+                      >
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-[11px] font-black uppercase text-white/90">{student.name}</span>
+                        <span className="text-[9px] font-bold text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded-md font-mono">
+                          {student.stick_size || 'N/A'}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
 
             {/* Filter controls */}
             <div className="flex flex-col md:flex-row gap-6">
