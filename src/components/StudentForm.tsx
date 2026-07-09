@@ -35,8 +35,12 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
     photo_url: initialData?.photo_url || '',
     tshirt_status: initialData?.tshirt_status || 'None',
     tshirt_size: initialData?.tshirt_size || 'None',
+    tshirt_total_amount: initialData?.tshirt_total_amount?.toString() || '',
+    tshirt_amount_paid: initialData?.tshirt_amount_paid?.toString() || '',
     stick_status: initialData?.stick_status || 'None',
     stick_size: initialData?.stick_size || 'None',
+    stick_total_amount: initialData?.stick_total_amount?.toString() || '',
+    stick_amount_paid: initialData?.stick_amount_paid?.toString() || '',
     private_slots: initialData?.private_slots || '',
     syllabus_progress: initialData?.syllabus_progress || '',
     remaining_sessions: initialData?.remaining_sessions?.toString() || '10',
@@ -60,8 +64,12 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
         photo_url: initialData?.photo_url || '',
         tshirt_status: initialData?.tshirt_status || 'None',
         tshirt_size: initialData?.tshirt_size || 'None',
+        tshirt_total_amount: initialData?.tshirt_total_amount?.toString() || '',
+        tshirt_amount_paid: initialData?.tshirt_amount_paid?.toString() || '',
         stick_status: initialData?.stick_status || 'None',
         stick_size: initialData?.stick_size || 'None',
+        stick_total_amount: initialData?.stick_total_amount?.toString() || '',
+        stick_amount_paid: initialData?.stick_amount_paid?.toString() || '',
         private_slots: initialData?.private_slots || '',
         syllabus_progress: initialData?.syllabus_progress || '',
         remaining_sessions: initialData?.remaining_sessions?.toString() || '10',
@@ -156,8 +164,12 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
       photo_url: form.photo_url,
       tshirt_status: form.tshirt_status as any,
       tshirt_size: form.tshirt_size,
+      tshirt_total_amount: form.tshirt_total_amount ? parseInt(form.tshirt_total_amount) : undefined,
+      tshirt_amount_paid: form.tshirt_amount_paid ? parseInt(form.tshirt_amount_paid) : undefined,
       stick_status: form.stick_status as any,
       stick_size: form.stick_size,
+      stick_total_amount: form.stick_total_amount ? parseInt(form.stick_total_amount) : undefined,
+      stick_amount_paid: form.stick_amount_paid ? parseInt(form.stick_amount_paid) : undefined,
       is_private: isPrivate,
       private_slots: isPrivate ? form.private_slots : undefined,
       syllabus_progress: isPrivate ? form.syllabus_progress : undefined,
@@ -405,6 +417,25 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                       </div>
                     </div>
 
+                    {form.tshirt_status !== 'None' && (
+                      <>
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">T-Shirt Price (₹)</label>
+                          <div className="relative group/input">
+                            <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                            <input name="tshirt_total_amount" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Total price" value={form.tshirt_total_amount} onChange={handleChange} />
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">T-Shirt Amount Paid (₹)</label>
+                          <div className="relative group/input">
+                            <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                            <input name="tshirt_amount_paid" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Amount paid" value={form.tshirt_amount_paid} onChange={handleChange} />
+                          </div>
+                        </div>
+                      </>
+                    )}
+
                     {/* Row 8.5: Stick Details */}
                     <div className="space-y-4">
                       <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Stick Size / Length</label>
@@ -436,6 +467,25 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                         </select>
                       </div>
                     </div>
+
+                    {form.stick_status !== 'None' && (
+                      <>
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Stick Price (₹)</label>
+                          <div className="relative group/input">
+                            <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                            <input name="stick_total_amount" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Total price" value={form.stick_total_amount} onChange={handleChange} />
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Stick Amount Paid (₹)</label>
+                          <div className="relative group/input">
+                            <CreditCard className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                            <input name="stick_amount_paid" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Amount paid" value={form.stick_amount_paid} onChange={handleChange} />
+                          </div>
+                        </div>
+                      </>
+                    )}
 
                     {isPrivate && (
                       <>
