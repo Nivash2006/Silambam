@@ -1190,7 +1190,7 @@ const Tournaments: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Show size and status options only if toggle is ON */}
+                    {/* Show size and paid toggle only if student Wants T-Shirt */}
                     {student.tshirt_status && student.tshirt_status !== 'None' && (
                       <>
                         {/* Size Select Dropdown */}
@@ -1210,22 +1210,34 @@ const Tournaments: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Status Select Dropdown */}
-                        <div className="space-y-1 w-full sm:w-44 shrink-0">
-                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">T-Shirt Status</label>
-                          <div className="relative">
-                            <select
-                              value={student.tshirt_status || 'None'}
-                              onChange={(e) => handleUpdateTshirt(student.id, { tshirt_status: e.target.value as any })}
-                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
-                            >
-                              <option value="None" className="bg-[#0f172a] text-white">None</option>
-                              <option value="Wants" className="bg-[#0f172a] text-white">Wants T-Shirt</option>
-                              <option value="Already Has" className="bg-[#0f172a] text-white">Already Has</option>
-                              <option value="Bought (Paid)" className="bg-[#0f172a] text-white">Bought (Paid)</option>
-                              <option value="Bought (Unpaid)" className="bg-[#0f172a] text-white">Bought (Unpaid)</option>
-                            </select>
-                          </div>
+                        {/* Separate Paid Toggle */}
+                        <div className="flex flex-col gap-1 shrink-0 items-start">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Fee Paid</label>
+                          <button
+                            onClick={() => handleUpdateTshirt(student.id, {
+                              tshirt_status: (student.tshirt_status === 'Bought (Paid)' ? 'Wants' : 'Bought (Paid)') as any
+                            })}
+                            className={cn(
+                              "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                              student.tshirt_status === 'Bought (Paid)'
+                                ? "bg-amber-500 border-transparent shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                                : "bg-white/[0.02] border-white/5"
+                            )}
+                            title={student.tshirt_status === 'Bought (Paid)' ? "Mark as Unpaid" : "Mark as Paid"}
+                          >
+                            <span className="absolute left-2 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.tshirt_status === 'Bought (Paid)' ? 1 : 0 }}>
+                              PAID
+                            </span>
+                            <span className="absolute right-1.5 text-[7px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.tshirt_status === 'Bought (Paid)' ? 0 : 1 }}>
+                              DUE
+                            </span>
+                            <div className={cn(
+                              "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                              student.tshirt_status === 'Bought (Paid)'
+                                ? "bg-[#05070a] translate-x-7"
+                                : "bg-white/20 translate-x-0"
+                            )} />
+                          </button>
                         </div>
                       </>
                     )}
@@ -1402,6 +1414,7 @@ const Tournaments: React.FC = () => {
                       </button>
                     </div>
 
+                    {/* Show size and paid toggle only if student Wants Stick */}
                     {student.stick_status && student.stick_status !== 'None' && (
                       <>
                         {/* Size Select Dropdown */}
@@ -1421,22 +1434,34 @@ const Tournaments: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Status Select Dropdown */}
-                        <div className="space-y-1 w-full sm:w-44 shrink-0">
-                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Stick Status</label>
-                          <div className="relative">
-                            <select
-                              value={student.stick_status || 'None'}
-                              onChange={(e) => handleUpdateStick(student.id, { stick_status: e.target.value as any })}
-                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
-                            >
-                              <option value="None" className="bg-[#0f172a] text-white">None</option>
-                              <option value="Wants" className="bg-[#0f172a] text-white">Wants Stick</option>
-                              <option value="Already Has" className="bg-[#0f172a] text-white">Already Has</option>
-                              <option value="Bought (Paid)" className="bg-[#0f172a] text-white">Bought (Paid)</option>
-                              <option value="Bought (Unpaid)" className="bg-[#0f172a] text-white">Bought (Unpaid)</option>
-                            </select>
-                          </div>
+                        {/* Separate Paid Toggle for Stick */}
+                        <div className="flex flex-col gap-1 shrink-0 items-start">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Fee Paid</label>
+                          <button
+                            onClick={() => handleUpdateStick(student.id, {
+                              stick_status: (student.stick_status === 'Bought (Paid)' ? 'Wants' : 'Bought (Paid)') as any
+                            })}
+                            className={cn(
+                              "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                              student.stick_status === 'Bought (Paid)'
+                                ? "bg-amber-500 border-transparent shadow-[0_0_20px_rgba(245,158,11,0.25)]"
+                                : "bg-white/[0.02] border-white/5"
+                            )}
+                            title={student.stick_status === 'Bought (Paid)' ? "Mark as Unpaid" : "Mark as Paid"}
+                          >
+                            <span className="absolute left-2 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.stick_status === 'Bought (Paid)' ? 1 : 0 }}>
+                              PAID
+                            </span>
+                            <span className="absolute right-1.5 text-[7px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: student.stick_status === 'Bought (Paid)' ? 0 : 1 }}>
+                              DUE
+                            </span>
+                            <div className={cn(
+                              "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                              student.stick_status === 'Bought (Paid)'
+                                ? "bg-[#05070a] translate-x-7"
+                                : "bg-white/20 translate-x-0"
+                            )} />
+                          </button>
                         </div>
                       </>
                     )}
