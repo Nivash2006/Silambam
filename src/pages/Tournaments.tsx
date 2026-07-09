@@ -51,7 +51,7 @@ const Tournaments: React.FC = () => {
   const [upcomingTournaments, setUpcomingTournaments] = useState<UpcomingTournament[]>([]);
   const [registrations, setRegistrations] = useState<TournamentRegistration[]>([]);
   
-  const [activeTab, setActiveTab] = useState<'achievements' | 'upcoming' | 'tshirts'>('achievements');
+  const [activeTab, setActiveTab] = useState<'achievements' | 'upcoming' | 'tshirts' | 'sticks'>('achievements');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
@@ -98,6 +98,10 @@ const Tournaments: React.FC = () => {
   // T-Shirt status counts
   const [tshirtSearch, setTshirtSearch] = useState('');
   const [tshirtFilter, setTshirtFilter] = useState<string>('All');
+
+  // Stick status counts
+  const [stickSearch, setStickSearch] = useState('');
+  const [stickFilter, setStickFilter] = useState<string>('All');
 
   useEffect(() => {
     fetchData();
@@ -279,6 +283,31 @@ const Tournaments: React.FC = () => {
     });
   };
 
+  const handleUpdateStick = async (studentId: string, updates: Partial<Student>) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update(updates)
+        .eq('id', studentId);
+      if (error) throw error;
+      toast.success('Stick details updated.');
+      fetchData();
+    } catch (err) {
+      toast.error('Failed to update stick details.');
+    }
+  };
+
+  const handleToggleStick = async (studentId: string, currentStatus: string | null | undefined, currentSize: string | null | undefined) => {
+    const isWants = currentStatus && currentStatus !== 'None';
+    const newStatus = isWants ? 'None' : 'Wants';
+    const newSize = isWants ? 'None' : (currentSize && currentSize !== 'None' ? currentSize : '4.0 ft');
+    
+    await handleUpdateStick(studentId, {
+      stick_status: newStatus as any,
+      stick_size: newSize
+    });
+  };
+
   // Delete Achievement Record
   const handleDeleteAchievement = async (id: string) => {
     setConfirmState({
@@ -457,6 +486,23 @@ const Tournaments: React.FC = () => {
     has: students.filter(s => s.tshirt_status === 'Already Has').length,
   };
 
+  // Stick tab filters
+  const filteredSticks = students.filter(s => {
+    const matchesSearch = s.name.toLowerCase().includes(stickSearch.toLowerCase()) ||
+                          (s.class_std || '').toLowerCase().includes(stickSearch.toLowerCase());
+    const matchesFilter = stickFilter === 'All' || 
+                          (stickFilter === 'None' && (!s.stick_status || s.stick_status === 'None')) ||
+                          s.stick_status === stickFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const stickStats = {
+    wants: students.filter(s => s.stick_status === 'Wants').length,
+    paid: students.filter(s => s.stick_status === 'Bought (Paid)').length,
+    unpaid: students.filter(s => s.stick_status === 'Bought (Unpaid)').length,
+    has: students.filter(s => s.stick_status === 'Already Has').length,
+  };
+
   const selectedRegs = registrations.filter(r => r.tournament_id === selectedUpcoming?.id);
   const unregisteredStudents = students.filter(s => 
     !selectedRegs.some(r => r.student_id === s.id)
@@ -524,6 +570,7 @@ const Tournaments: React.FC = () => {
           { id: 'achievements', label: 'Achievements', icon: Trophy },
           { id: 'upcoming', label: 'Upcoming Tournaments', icon: Calendar },
           { id: 'tshirts', label: 'T-Shirt Management', icon: Tag },
+          { id: 'sticks', label: 'Stick Management', icon: Award },
         ].map(tab => {
           const Icon = tab.icon;
           return (
@@ -1063,6 +1110,177 @@ const Tournaments: React.FC = () => {
                 </div>
               ))}
               {filteredTshirts.length === 0 && (
+                <div className="py-24 text-center glass-card border-dashed border-white/5 text-white/20 uppercase tracking-widest text-xs font-black">
+                  No students match the criteria
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'sticks' && (
+          <div className="xl:col-span-12 space-y-12">
+            {/* Stick Stats indicators */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { label: 'Wants Stick', value: stickStats.wants, color: 'text-sky-400', bg: 'bg-sky-500/10', border: 'border-sky-500/20' },
+                { label: 'Already Has', value: stickStats.has, color: 'text-white/60', bg: 'bg-white/5', border: 'border-white/10' },
+                { label: 'Bought (Paid)', value: stickStats.paid, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+                { label: 'Bought (Unpaid)', value: stickStats.unpaid, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' }
+              ].map((stat, i) => (
+                <div key={i} className="glass-card !p-6 !rounded-2xl border-white/5 bg-white/[0.01] flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] font-black text-white/20 uppercase tracking-widest mb-1">{stat.label}</p>
+                    <p className={cn("text-3xl font-black italic", stat.color)}>{stat.value}</p>
+                  </div>
+                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center border", stat.bg, stat.border)}>
+                    <Award className="w-5 h-5 text-emerald-400" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Filter controls */}
+            <div className="flex flex-col md:flex-row gap-6">
+              <div className="flex-1 glass-card !p-4 !rounded-[2rem] border-white/5 bg-white/[0.01] flex items-center px-6 gap-4">
+                <Search className="w-5 h-5 text-white/20" />
+                <input 
+                  type="text"
+                  placeholder="Search students by name or class..."
+                  className="bg-transparent flex-1 focus:outline-none text-white font-bold"
+                  value={stickSearch}
+                  onChange={e => setStickSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                {['All', 'Wants', 'Already Has', 'Bought (Paid)', 'Bought (Unpaid)', 'None'].map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => setStickFilter(f)}
+                    className={cn(
+                      "px-5 py-2 rounded-xl text-[9px] font-black border uppercase tracking-widest transition-all whitespace-nowrap",
+                      stickFilter === f 
+                        ? "bg-emerald-500 border-transparent text-white shadow-lg shadow-emerald-500/20"
+                        : "bg-white/[0.02] border-white/5 text-white/30 hover:text-white"
+                    )}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Students Stick List */}
+            <div className="grid grid-cols-1 gap-5">
+              {filteredSticks.map(student => (
+                <div 
+                  key={student.id} 
+                  className="glass-card flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 !p-5 sm:!p-6 border-white/5 bg-white/[0.01] hover:border-emerald-500/20 transition-all !rounded-[2rem] sm:!rounded-3xl"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xl font-black text-white italic uppercase tracking-tight">{student.name}</h4>
+                    <div className="flex flex-wrap gap-4 mt-2 text-[10px] font-bold text-white/30 uppercase tracking-widest">
+                      <span>Phone: <strong className="text-white/60">{student.phone || 'N/A'}</strong></span>
+                      <span>•</span>
+                      <span>Age: <strong className="text-white/60">{student.age} Yrs</strong></span>
+                      <span>•</span>
+                      <span>Class: <strong className="text-white/60">{student.class_std || 'N/A'}</strong></span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 sm:gap-6 w-full md:w-auto">
+                    {/* Wants Stick Toggle Switch */}
+                    <div className="flex flex-col gap-1 shrink-0 items-start">
+                      <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Wants Stick</label>
+                      <button
+                        onClick={() => handleToggleStick(student.id, student.stick_status, student.stick_size)}
+                        className={cn(
+                          "w-16 h-9 rounded-full transition-all duration-300 p-1 flex items-center cursor-pointer border relative select-none shrink-0",
+                          (student.stick_status && student.stick_status !== 'None')
+                            ? "bg-emerald-500 border-transparent shadow-[0_0_20px_rgba(16,185,129,0.2)]" 
+                            : "bg-white/[0.02] border-white/5"
+                        )}
+                        title={(student.stick_status && student.stick_status !== 'None') ? "Turn off (No Stick)" : "Turn on (Needs Stick)"}
+                      >
+                        <span className="absolute left-2.5 text-[8px] font-black text-[#05070a] uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.stick_status && student.stick_status !== 'None') ? 1 : 0 }}>
+                          ON
+                        </span>
+                        <span className="absolute right-2 text-[8px] font-black text-white/20 uppercase tracking-wider transition-opacity duration-200 pointer-events-none" style={{ opacity: (student.stick_status && student.stick_status !== 'None') ? 0 : 1 }}>
+                          OFF
+                        </span>
+                        <div className={cn(
+                          "w-6 h-6 rounded-full shadow-md transition-all duration-300 transform",
+                          (student.stick_status && student.stick_status !== 'None') 
+                            ? "bg-[#05070a] translate-x-7" 
+                            : "bg-white/20"
+                        )} />
+                      </button>
+                    </div>
+
+                    {student.stick_status && student.stick_status !== 'None' && (
+                      <>
+                        {/* Size Select Dropdown */}
+                        <div className="space-y-1 w-full sm:w-36 shrink-0">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Stick Length</label>
+                          <div className="relative">
+                            <select
+                              value={student.stick_size || 'None'}
+                              onChange={(e) => handleUpdateStick(student.id, { stick_size: e.target.value })}
+                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                            >
+                              <option value="None" className="bg-[#0f172a] text-white">None</option>
+                              {['3.0 ft', '3.5 ft', '4.0 ft', '4.5 ft', '5.0 ft', '5.5 ft', '6.0 ft'].map(sz => (
+                                <option key={sz} value={sz} className="bg-[#0f172a] text-white">Length {sz}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Status Select Dropdown */}
+                        <div className="space-y-1 w-full sm:w-44 shrink-0">
+                          <label className="text-[8px] font-black text-white/20 uppercase tracking-widest block ml-1">Stick Status</label>
+                          <div className="relative">
+                            <select
+                              value={student.stick_status || 'None'}
+                              onChange={(e) => handleUpdateStick(student.id, { stick_status: e.target.value as any })}
+                              className="bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 w-full text-xs font-black text-white focus:outline-none appearance-none cursor-pointer"
+                            >
+                              <option value="None" className="bg-[#0f172a] text-white">None</option>
+                              <option value="Wants" className="bg-[#0f172a] text-white">Wants Stick</option>
+                              <option value="Already Has" className="bg-[#0f172a] text-white">Already Has</option>
+                              <option value="Bought (Paid)" className="bg-[#0f172a] text-white">Bought (Paid)</option>
+                              <option value="Bought (Unpaid)" className="bg-[#0f172a] text-white">Bought (Unpaid)</option>
+                            </select>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 justify-end w-full sm:w-auto mt-2 sm:mt-0">
+                      <button
+                        onClick={() => {
+                          setEditingStudent(student);
+                          setIsStudentFormOpen(true);
+                        }}
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-emerald-400 hover:border-emerald-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
+                        title="Edit Student"
+                      >
+                        <Edit2 className="w-4.5 h-4.5 pointer-events-none" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteStudent(student.id, student.name)}
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-rose-400 hover:border-rose-500/20 transition-all flex items-center justify-center shrink-0 pointer-events-auto"
+                        title="Delete Student"
+                      >
+                        <Trash2 className="w-4.5 h-4.5 pointer-events-none" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {filteredSticks.length === 0 && (
                 <div className="py-24 text-center glass-card border-dashed border-white/5 text-white/20 uppercase tracking-widest text-xs font-black">
                   No students match the criteria
                 </div>

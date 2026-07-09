@@ -35,6 +35,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
     photo_url: initialData?.photo_url || '',
     tshirt_status: initialData?.tshirt_status || 'None',
     tshirt_size: initialData?.tshirt_size || 'None',
+    stick_status: initialData?.stick_status || 'None',
+    stick_size: initialData?.stick_size || 'None',
     private_slots: initialData?.private_slots || '',
     syllabus_progress: initialData?.syllabus_progress || '',
     remaining_sessions: initialData?.remaining_sessions?.toString() || '10',
@@ -58,6 +60,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
         photo_url: initialData?.photo_url || '',
         tshirt_status: initialData?.tshirt_status || 'None',
         tshirt_size: initialData?.tshirt_size || 'None',
+        stick_status: initialData?.stick_status || 'None',
+        stick_size: initialData?.stick_size || 'None',
         private_slots: initialData?.private_slots || '',
         syllabus_progress: initialData?.syllabus_progress || '',
         remaining_sessions: initialData?.remaining_sessions?.toString() || '10',
@@ -152,6 +156,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
       photo_url: form.photo_url,
       tshirt_status: form.tshirt_status as any,
       tshirt_size: form.tshirt_size,
+      stick_status: form.stick_status as any,
+      stick_size: form.stick_size,
       is_private: isPrivate,
       private_slots: isPrivate ? form.private_slots : undefined,
       syllabus_progress: isPrivate ? form.syllabus_progress : undefined,
@@ -392,6 +398,38 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                         <select name="tshirt_status" className="input-field w-full pl-14 h-16 bg-[#0a0f14] font-bold italic tracking-tight appearance-none cursor-pointer" value={form.tshirt_status} onChange={handleChange}>
                           <option value="None">None</option>
                           <option value="Wants">Wants T-Shirt</option>
+                          <option value="Already Has">Already Has</option>
+                          <option value="Bought (Paid)">Bought (Paid)</option>
+                          <option value="Bought (Unpaid)">Bought (Unpaid)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Row 8.5: Stick Details */}
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Stick Size / Length</label>
+                      <div className="relative group/input">
+                        <Award className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                        <select name="stick_size" className="input-field w-full pl-14 h-16 bg-[#0a0f14] font-bold italic tracking-tight appearance-none cursor-pointer" value={form.stick_size} onChange={handleChange}>
+                          <option value="None">None</option>
+                          <option value="3.0 ft">3.0 ft (Kids)</option>
+                          <option value="3.5 ft">3.5 ft</option>
+                          <option value="4.0 ft">4.0 ft (Standard)</option>
+                          <option value="4.5 ft">4.5 ft</option>
+                          <option value="5.0 ft">5.0 ft</option>
+                          <option value="5.5 ft">5.5 ft</option>
+                          <option value="6.0 ft">6.0 ft (Tall)</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Stick Status</label>
+                      <div className="relative group/input">
+                        <Zap className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                        <select name="stick_status" className="input-field w-full pl-14 h-16 bg-[#0a0f14] font-bold italic tracking-tight appearance-none cursor-pointer" value={form.stick_status} onChange={handleChange}>
+                          <option value="None">None</option>
+                          <option value="Wants">Wants Stick</option>
                           <option value="Already Has">Already Has</option>
                           <option value="Bought (Paid)">Bought (Paid)</option>
                           <option value="Bought (Unpaid)">Bought (Unpaid)</option>
