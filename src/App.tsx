@@ -7,6 +7,7 @@ import Attendance from './pages/Attendance';
 import Fees from './pages/Fees';
 import Tournaments from './pages/Tournaments';
 import Reports from './pages/Reports';
+import PrivateStudents from './pages/PrivateStudents';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -48,6 +49,7 @@ function AnimatedRoutes() {
         <Routes location={location}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/students" element={<Students />} />
+          <Route path="/private-students" element={<PrivateStudents />} />
           <Route path="/attendance" element={<Attendance />} />
           <Route path="/fees" element={<Fees />} />
           <Route path="/tournaments" element={<Tournaments />} />

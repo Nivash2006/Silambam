@@ -11,13 +11,14 @@ interface StudentFormProps {
   onClose: () => void;
   onSubmit: (data: Omit<Student, 'id' | 'fee_status' | 'created_at'>) => void;
   initialData?: Student;
+  isPrivate?: boolean;
 }
 
 const beltLevels: BeltLevel[] = ['White', 'Yellow', 'Orange', 'Green', 'Blue', 'Purple', 'Brown', 'Black'];
 
 import Portal from './Portal';
 
-const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, initialData }) => {
+const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, initialData, isPrivate = false }) => {
   const [form, setForm] = React.useState({
     name: initialData?.name || '',
     age: initialData?.age?.toString() || '',
@@ -30,10 +31,13 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
     address: initialData?.address || '',
     joining_date: initialData?.joining_date || format(new Date(), 'yyyy-MM-dd'),
     belt_level: initialData?.belt_level || 'White' as BeltLevel,
-    fee_amount: initialData?.fee_amount?.toString() || '500',
+    fee_amount: initialData?.fee_amount?.toString() || '1500', // default private fee is usually higher, e.g. 1500
     photo_url: initialData?.photo_url || '',
     tshirt_status: initialData?.tshirt_status || 'None',
     tshirt_size: initialData?.tshirt_size || 'None',
+    private_slots: initialData?.private_slots || '',
+    syllabus_progress: initialData?.syllabus_progress || '',
+    remaining_sessions: initialData?.remaining_sessions?.toString() || '10',
   });
 
   React.useEffect(() => {
@@ -50,13 +54,16 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
         address: initialData?.address || '',
         joining_date: initialData?.joining_date || format(new Date(), 'yyyy-MM-dd'),
         belt_level: initialData?.belt_level || 'White' as BeltLevel,
-        fee_amount: initialData?.fee_amount?.toString() || '500',
+        fee_amount: initialData?.fee_amount?.toString() || (isPrivate ? '1500' : '500'),
         photo_url: initialData?.photo_url || '',
         tshirt_status: initialData?.tshirt_status || 'None',
         tshirt_size: initialData?.tshirt_size || 'None',
+        private_slots: initialData?.private_slots || '',
+        syllabus_progress: initialData?.syllabus_progress || '',
+        remaining_sessions: initialData?.remaining_sessions?.toString() || '10',
       });
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, isPrivate]);
 
   const [uploading, setUploading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +141,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
       age: parseInt(form.age) || 0,
       mothers_name: form.mothers_name,
       dob: form.dob,
-      class_std: form.class_std,
+      class_std: isPrivate ? '' : form.class_std,
       student_type: form.student_type as 'New' | 'Old',
       phone: form.phone,
       parent_phone: form.parent_phone,
@@ -145,6 +152,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
       photo_url: form.photo_url,
       tshirt_status: form.tshirt_status as any,
       tshirt_size: form.tshirt_size,
+      is_private: isPrivate,
+      private_slots: isPrivate ? form.private_slots : undefined,
+      syllabus_progress: isPrivate ? form.syllabus_progress : undefined,
+      remaining_sessions: isPrivate ? (parseInt(form.remaining_sessions) || 0) : undefined,
     });
     onClose();
   };
@@ -259,13 +270,23 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                         <input name="age" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Years" value={form.age} onChange={handleChange} required />
                       </div>
                     </div>
-                    <div className="space-y-4">
-                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Class / Standard</label>
-                      <div className="relative group/input">
-                        <Award className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
-                        <input name="class_std" type="text" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="e.g. 5th Std, LKG, College" value={form.class_std} onChange={handleChange} required />
+                    {!isPrivate ? (
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Class / Standard</label>
+                        <div className="relative group/input">
+                          <Award className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                          <input name="class_std" type="text" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="e.g. 5th Std, LKG, College" value={form.class_std} onChange={handleChange} required />
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Private Class Slot(s)</label>
+                        <div className="relative group/input">
+                          <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                          <input name="private_slots" type="text" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="e.g. Tue & Thu 6:00 PM" value={form.private_slots} onChange={handleChange} />
+                        </div>
+                      </div>
+                    )}
 
                     {/* Row 3: Mother's Name & Student Status */}
                     <div className="space-y-4">
@@ -295,10 +316,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Father's Phone Number (Emergency)</label>
+                      <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Father's Phone {isPrivate ? '(Optional)' : '(Emergency)'}</label>
                       <div className="relative group/input">
                         <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
-                        <input name="parent_phone" type="tel" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Emergency Contact No" value={form.parent_phone} onChange={handleChange} required />
+                        <input name="parent_phone" type="tel" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="Emergency Contact No" value={form.parent_phone} onChange={handleChange} required={!isPrivate} />
                       </div>
                     </div>
 
@@ -377,6 +398,28 @@ const StudentForm: React.FC<StudentFormProps> = ({ isOpen, onClose, onSubmit, in
                         </select>
                       </div>
                     </div>
+
+                    {isPrivate && (
+                      <>
+                        {/* Row 9: Prepaid Class Credits */}
+                        <div className="space-y-4 md:col-span-2">
+                          <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Prepaid Class Sessions (Credits)</label>
+                          <div className="relative group/input">
+                            <Zap className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                            <input name="remaining_sessions" type="number" className="input-field w-full pl-14 h-16 bg-white/[0.01] font-bold italic tracking-tight" placeholder="e.g. 10" value={form.remaining_sessions} onChange={handleChange} />
+                          </div>
+                        </div>
+
+                        {/* Row 10: Syllabus Focus & Lesson Notes */}
+                        <div className="space-y-4 md:col-span-2">
+                          <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em] ml-1">Syllabus Focus / Individual Lesson Notes</label>
+                          <div className="relative group/input">
+                            <Award className="absolute left-5 top-6 w-5 h-5 text-white/10 group-focus-within/input:text-emerald-500 transition-colors" />
+                            <textarea name="syllabus_progress" className="input-field w-full pl-14 pt-6 min-h-[100px] bg-white/[0.01] font-bold italic tracking-tight" placeholder="Current weapons, steps focus, or specific private class goals..." value={form.syllabus_progress} onChange={handleChange} />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="pt-10 flex flex-col sm:flex-row gap-6 relative z-30">

@@ -17,7 +17,8 @@ import {
   Home,
   LogOut,
   User,
-  ArrowUpRight
+  ArrowUpRight,
+  UserCheck
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { clsx, type ClassValue } from 'clsx';
@@ -62,6 +63,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: Home, activeIcon: Zap },
     { name: 'Students', path: '/students', icon: Users, activeIcon: ShieldCheck },
+    { name: 'Private Batch', path: '/private-students', icon: UserCheck, activeIcon: ShieldCheck },
     { name: 'Attendance', path: '/attendance', icon: CalendarCheck, activeIcon: Zap },
     { name: 'Fees', path: '/fees', icon: CreditCard, activeIcon: Layers },
     { name: 'Tournaments', path: '/tournaments', icon: Trophy, activeIcon: Trophy },

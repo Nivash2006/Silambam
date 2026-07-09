@@ -25,6 +25,7 @@ import { Student, FeePayment } from '../types';
 import { supabase } from '../lib/supabase';
 import { format, subMonths, startOfDay, endOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Portal from '../components/Portal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -85,7 +86,8 @@ const Fees: React.FC = () => {
         .order('name');
       
       if (studentError) throw studentError;
-      setStudents(studentData || []);
+      const regularStudents = (studentData || []).filter(s => !s.is_private);
+      setStudents(regularStudents);
 
       // 2. Fetch Current Month Payments
       const { data: paymentData, error: paymentError } = await supabase
@@ -290,6 +292,24 @@ const Fees: React.FC = () => {
                <TrendingUp className="w-3 h-3 text-white/40" />
                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{rate}% Collection Efficiency</span>
             </div>
+          </div>
+
+          <div className="flex bg-black/40 border border-white/5 rounded-2xl p-1 relative mt-6 w-fit pointer-events-auto">
+            <button
+              className="relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#05070a] z-10 whitespace-nowrap cursor-default"
+            >
+              <motion.div
+                layoutId="batchTabActive"
+                className="absolute inset-0 bg-emerald-500 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] z-[-1]"
+              />
+              Regular Batch
+            </button>
+            <Link
+              to="/private-students"
+              className="relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors duration-300 z-10 whitespace-nowrap text-center flex items-center justify-center cursor-pointer pointer-events-auto"
+            >
+              Private Batch
+            </Link>
           </div>
         </motion.div>
 

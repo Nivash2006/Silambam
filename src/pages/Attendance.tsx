@@ -20,6 +20,7 @@ import { Student } from '../types';
 import { format, subDays, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Portal from '../components/Portal';
 import jsPDF from 'jspdf';
@@ -61,7 +62,8 @@ const Attendance: React.FC = () => {
         .order('name');
       
       if (studentError) throw studentError;
-      setStudents(studentData || []);
+      const regularStudents = (studentData || []).filter(s => !s.is_private);
+      setStudents(regularStudents);
 
       // 2. Fetch Daily Attendance
       const { data: attendanceData, error: attendanceError } = await supabase
@@ -72,7 +74,7 @@ const Attendance: React.FC = () => {
       if (attendanceError) throw attendanceError;
 
       const initialAttendance: Record<string, 'present' | 'absent' | null> = {};
-      studentData?.forEach(s => {
+      regularStudents.forEach(s => {
         const record = attendanceData?.find(a => a.student_id === s.id);
         initialAttendance[s.id] = record ? (record.status as 'present' | 'absent') : null;
       });
@@ -450,6 +452,24 @@ const Attendance: React.FC = () => {
                <CalendarIcon className="w-3 h-3 text-white/40" />
                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{format(new Date(selectedDate), 'dd MMMM yyyy')}</span>
             </div>
+          </div>
+
+          <div className="flex bg-black/40 border border-white/5 rounded-2xl p-1 relative mt-6 w-fit pointer-events-auto">
+            <button
+              className="relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#05070a] z-10 whitespace-nowrap cursor-default"
+            >
+              <motion.div
+                layoutId="batchTabActive"
+                className="absolute inset-0 bg-emerald-500 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] z-[-1]"
+              />
+              Regular Batch
+            </button>
+            <Link
+              to="/private-students"
+              className="relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors duration-300 z-10 whitespace-nowrap text-center flex items-center justify-center cursor-pointer pointer-events-auto"
+            >
+              Private Batch
+            </Link>
           </div>
         </motion.div>
 

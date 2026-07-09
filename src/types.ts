@@ -16,6 +16,10 @@ export interface Student {
   photo_url?: string;
   tshirt_status?: 'None' | 'Wants' | 'Already Has' | 'Bought (Paid)' | 'Bought (Unpaid)';
   tshirt_size?: string;
+  is_private?: boolean;
+  private_slots?: string;
+  syllabus_progress?: string;
+  remaining_sessions?: number;
   created_at?: string;
 }
 

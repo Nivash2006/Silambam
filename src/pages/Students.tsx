@@ -30,6 +30,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { supabase } from '../lib/supabase';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -211,7 +212,7 @@ const Students: React.FC = () => {
       
       const paidIds = new Set(feeData?.map(f => f.student_id));
       
-      const enrichedStudents = (studentData || []).map(s => ({
+      const enrichedStudents = (studentData || []).filter(s => !s.is_private).map(s => ({
         ...s,
         fee_status: paidIds.has(s.id) ? 'paid' : 'pending'
       }));
@@ -318,6 +319,24 @@ const Students: React.FC = () => {
           <div className="flex items-center gap-4 mt-6">
             <div className="h-px w-8 bg-emerald-500/50" />
             <p className="text-white/30 font-black uppercase tracking-[0.4em] text-[10px]">Managing {students.length} Student Records</p>
+          </div>
+
+          <div className="flex bg-black/40 border border-white/5 rounded-2xl p-1 relative mt-6 w-fit pointer-events-auto">
+            <button
+              className="relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#05070a] z-10 whitespace-nowrap cursor-default"
+            >
+              <motion.div
+                layoutId="batchTabActive"
+                className="absolute inset-0 bg-emerald-500 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.2)] z-[-1]"
+              />
+              Regular Batch
+            </button>
+            <Link
+              to="/private-students"
+              className="relative px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors duration-300 z-10 whitespace-nowrap text-center flex items-center justify-center cursor-pointer pointer-events-auto"
+            >
+              Private Batch
+            </Link>
           </div>
         </motion.div>
         
