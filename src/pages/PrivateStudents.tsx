@@ -169,8 +169,9 @@ const PrivateStudents: React.FC = () => {
       }
       fetchData();
       setEditingStudent(undefined);
-    } catch (err) {
-      toast.error('Failed to save student.');
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Failed to save student: ${err.message || 'Unknown database error'}`);
     }
   };
 
@@ -386,13 +387,16 @@ const PrivateStudents: React.FC = () => {
             <h3 className="text-xl font-black uppercase tracking-wider">Database Update Required</h3>
           </div>
           <p className="text-sm text-white/70 leading-relaxed">
-            Please run the following SQL command in your <strong>Supabase SQL Editor</strong> to enable the Private Batch feature:
+            Please run the following SQL commands in your <strong>Supabase SQL Editor</strong> to enable the Private Batch feature:
           </p>
           <pre className="bg-black/60 border border-white/10 p-6 rounded-2xl text-xs font-mono text-emerald-400 overflow-x-auto select-all cursor-pointer">
             ALTER TABLE students ADD COLUMN is_private BOOLEAN DEFAULT FALSE;
+            ALTER TABLE students ADD COLUMN private_slots TEXT;
+            ALTER TABLE students ADD COLUMN syllabus_progress TEXT;
+            ALTER TABLE students ADD COLUMN remaining_sessions INTEGER DEFAULT 0;
           </pre>
           <p className="text-xs text-white/40">
-            After running the statement, refresh this page to begin managing private class slots, syllabus notes, and credits.
+            After running the statements, refresh this page to begin managing private class slots, syllabus notes, and credits.
           </p>
         </div>
       )}
